@@ -16,15 +16,17 @@ import { validGrades } from "@/app/constants/programs";
 import {
   AddedCourse,
   HandbookSemester,
-  MAX_PLANNED_SEMESTERS,
+  ModuleGroup,
   NeuroModule,
-  PlannedSemester,
 } from "@/app/types";
+import { PlanningCourseCard } from "@/components/PlanningCourseCard";
 import { getGroupColor } from "@/app/utils/colors";
 import {
   buildPlaceholders,
+  PlanningItem,
   userAddedHandbookSemester,
 } from "@/lib/planning";
+import { setPlanningDragData } from "@/lib/planningDrag";
 
 interface DetailedModuleCardProps {
   module: NeuroModule;
@@ -46,11 +48,6 @@ interface DetailedModuleCardProps {
   onRemoveUserCourse: (moduleId: string, courseId: string) => void;
   isExporting?: boolean;
   planningMode?: boolean;
-  plannedSemesters: Record<string, PlannedSemester>;
-  onSetPlannedSemester: (
-    itemId: string,
-    semester: PlannedSemester | "",
-  ) => void;
 }
 
 function GradeSelect({
@@ -95,45 +92,31 @@ function GradeSelect({
   );
 }
 
-function SemesterInput({
-  itemId,
-  handbookSemester,
-  plannedSemesters,
-  onSetPlannedSemester,
-}: {
-  itemId: string;
-  handbookSemester?: HandbookSemester;
-  plannedSemesters: Record<string, PlannedSemester>;
-  onSetPlannedSemester: (
-    itemId: string,
-    semester: PlannedSemester | "",
-  ) => void;
-}) {
-  const value = plannedSemesters[itemId];
+function toPlanningItem(
+  item: Omit<PlanningItem, "moduleId"> & { moduleId?: string },
+  moduleId: string,
+): PlanningItem {
+  return { ...item, moduleId };
+}
 
+function DraggablePlanningSource({
+  item,
+}: {
+  item: PlanningItem;
+}) {
   return (
-    <Input
-      type="number"
-      min={1}
-      max={MAX_PLANNED_SEMESTERS}
-      placeholder={
-        handbookSemester !== undefined ? String(handbookSemester) : "Sem"
-      }
-      value={value ?? ""}
-      onChange={(event) => {
-        const raw = event.target.value;
-        if (raw === "") {
-          onSetPlannedSemester(itemId, "");
-          return;
-        }
-        const parsed = Number.parseInt(raw, 10);
-        if (parsed >= 1 && parsed <= MAX_PLANNED_SEMESTERS) {
-          onSetPlannedSemester(itemId, parsed as PlannedSemester);
-        }
-      }}
-      className="w-16 text-center"
-      aria-label="Planned semester"
-    />
+    <div className="space-y-1">
+      <PlanningCourseCard
+        item={item}
+        draggable
+        onDragStart={(event) => setPlanningDragData(event, item.id)}
+      />
+      {item.handbookSemester !== undefined && (
+        <p className="text-xs text-gray-500 pl-1">
+          Handbook suggestion: Semester {item.handbookSemester}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -163,9 +146,10 @@ function SubCourseRow({
   onToggleCompletion,
   isExporting,
   planningMode,
+  moduleId,
+  moduleCode,
+  moduleGroup,
   handbookSemester,
-  plannedSemesters,
-  onSetPlannedSemester,
 }: {
   id: string;
   name: string;
@@ -178,13 +162,30 @@ function SubCourseRow({
   onToggleCompletion: (itemId: string) => void;
   isExporting?: boolean;
   planningMode?: boolean;
+  moduleId: string;
+  moduleCode: string;
+  moduleGroup: ModuleGroup;
   handbookSemester?: HandbookSemester;
-  plannedSemesters: Record<string, PlannedSemester>;
-  onSetPlannedSemester: (
-    itemId: string,
-    semester: PlannedSemester | "",
-  ) => void;
 }) {
+  if (planningMode) {
+    return (
+      <DraggablePlanningSource
+        item={toPlanningItem(
+          {
+            id,
+            moduleCode,
+            moduleGroup,
+            name,
+            credits,
+            handbookSemester,
+            graded,
+          },
+          moduleId,
+        )}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-gray-100">
       <div className="flex-1 min-w-0">
@@ -198,14 +199,6 @@ function SubCourseRow({
         <p className="text-sm text-gray-900 mt-0.5">{name}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {planningMode && (
-          <SemesterInput
-            itemId={id}
-            handbookSemester={handbookSemester}
-            plannedSemesters={plannedSemesters}
-            onSetPlannedSemester={onSetPlannedSemester}
-          />
-        )}
         {graded ? (
           <GradeSelect
             value={grade}
@@ -231,42 +224,11 @@ function SubCourseRow({
 }
 
 function PlaceholderCourseRow({
-  id,
-  name,
-  credits,
-  handbookSemester,
-  plannedSemesters,
-  onSetPlannedSemester,
+  item,
 }: {
-  id: string;
-  name: string;
-  credits: number;
-  handbookSemester?: HandbookSemester;
-  plannedSemesters: Record<string, PlannedSemester>;
-  onSetPlannedSemester: (
-    itemId: string,
-    semester: PlannedSemester | "",
-  ) => void;
+  item: PlanningItem;
 }) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-dashed border-gray-300">
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-gray-500">{credits} CP</span>
-          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-            Planned
-          </span>
-        </div>
-        <p className="text-sm text-gray-600 italic">{name}</p>
-      </div>
-      <SemesterInput
-        itemId={id}
-        handbookSemester={handbookSemester}
-        plannedSemesters={plannedSemesters}
-        onSetPlannedSemester={onSetPlannedSemester}
-      />
-    </div>
-  );
+  return <DraggablePlanningSource item={item} />;
 }
 
 function AddCourseForm({
@@ -353,8 +315,6 @@ export function DetailedModuleCard({
   onRemoveUserCourse,
   isExporting = false,
   planningMode = false,
-  plannedSemesters,
-  onSetPlannedSemester,
 }: DetailedModuleCardProps) {
   const borderColor = getGroupColor(module.group);
   const structure = module.structure;
@@ -418,9 +378,10 @@ export function DetailedModuleCard({
               onToggleCompletion={onToggleCompletion}
               isExporting={isExporting}
               planningMode={planningMode}
+              moduleId={module.id}
+              moduleCode={module.code}
+              moduleGroup={module.group}
               handbookSemester={subCourse.handbookSemester}
-              plannedSemesters={plannedSemesters}
-              onSetPlannedSemester={onSetPlannedSemester}
             />
           ))}
         </div>
@@ -429,6 +390,30 @@ export function DetailedModuleCard({
       {structure?.type === "guidedSlots" && (
         <div className="space-y-2 pl-2 border-l-2 border-gray-200">
           {structure.slots.map((slot) => {
+            const selectedOption = slot.options.find(
+              (option) => option.id === slotSelections[slot.id],
+            );
+
+            if (planningMode) {
+              return (
+                <DraggablePlanningSource
+                  key={slot.id}
+                  item={toPlanningItem(
+                    {
+                      id: slot.id,
+                      moduleCode: module.code,
+                      moduleGroup: module.group,
+                      name: selectedOption?.name ?? slot.label,
+                      credits: slot.credits,
+                      handbookSemester: slot.handbookSemester,
+                      graded: slot.graded,
+                    },
+                    module.id,
+                  )}
+                />
+              );
+            }
+
             return (
               <div
                 key={slot.id}
@@ -458,14 +443,6 @@ export function DetailedModuleCard({
                       ))}
                     </SelectContent>
                   </Select>
-                  {planningMode && (
-                    <SemesterInput
-                      itemId={slot.id}
-                      handbookSemester={slot.handbookSemester}
-                      plannedSemesters={plannedSemesters}
-                      onSetPlannedSemester={onSetPlannedSemester}
-                    />
-                  )}
                   {slot.graded ? (
                     <GradeSelect
                       value={grades[slot.id]}
@@ -502,75 +479,78 @@ export function DetailedModuleCard({
                 : " · Not counted in final grade"}
             </p>
           )}
-          {(userCourses[module.id] ?? []).map((course, index) => (
-            <div
-              key={course.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-gray-100"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-gray-500">
-                    {course.credits} CP
-                  </span>
-                  <StatusBadge graded={course.graded} />
-                </div>
-                <p className="text-sm text-gray-900">{course.name}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {planningMode && (
-                  <SemesterInput
-                    itemId={course.id}
-                    handbookSemester={userAddedHandbookSemester(
+          {(userCourses[module.id] ?? []).map((course, index) =>
+            planningMode ? (
+              <DraggablePlanningSource
+                key={course.id}
+                item={toPlanningItem(
+                  {
+                    id: course.id,
+                    moduleCode: module.code,
+                    moduleGroup: module.group,
+                    name: course.name,
+                    credits: course.credits,
+                    handbookSemester: userAddedHandbookSemester(
                       module.id,
                       index,
-                    )}
-                    plannedSemesters={plannedSemesters}
-                    onSetPlannedSemester={onSetPlannedSemester}
-                  />
+                    ),
+                    graded: course.graded,
+                  },
+                  module.id,
                 )}
-                {course.graded ? (
-                  <GradeSelect
-                    value={grades[course.id]}
-                    onChange={(next) => onSetGrade(course.id, next)}
-                    disabled={isExporting}
-                  />
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id={`user-${course.id}`}
-                      checked={completedModules.includes(course.id)}
-                      onCheckedChange={() => onToggleCompletion(course.id)}
+              />
+            ) : (
+              <div
+                key={course.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-gray-100"
+              >
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {course.credits} CP
+                    </span>
+                    <StatusBadge graded={course.graded} />
+                  </div>
+                  <p className="text-sm text-gray-900">{course.name}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {course.graded ? (
+                    <GradeSelect
+                      value={grades[course.id]}
+                      onChange={(next) => onSetGrade(course.id, next)}
                       disabled={isExporting}
                     />
-                    <Label htmlFor={`user-${course.id}`} className="text-sm">
-                      Completed
-                    </Label>
-                  </div>
-                )}
-                {!isExporting && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onRemoveUserCourse(module.id, course.id)}
-                  >
-                    Remove
-                  </Button>
-                )}
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`user-${course.id}`}
+                        checked={completedModules.includes(course.id)}
+                        onCheckedChange={() => onToggleCompletion(course.id)}
+                        disabled={isExporting}
+                      />
+                      <Label htmlFor={`user-${course.id}`} className="text-sm">
+                        Completed
+                      </Label>
+                    </div>
+                  )}
+                  {!isExporting && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onRemoveUserCourse(module.id, course.id)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-          {placeholders.map((placeholder) => (
-            <PlaceholderCourseRow
-              key={placeholder.id}
-              id={placeholder.id}
-              name={placeholder.name}
-              credits={placeholder.credits}
-              handbookSemester={placeholder.handbookSemester}
-              plannedSemesters={plannedSemesters}
-              onSetPlannedSemester={onSetPlannedSemester}
-            />
-          ))}
+            ),
+          )}
+          {planningMode &&
+            placeholders.map((placeholder) => (
+              <PlaceholderCourseRow key={placeholder.id} item={placeholder} />
+            ))}
           <AddCourseForm
             defaultGraded={structure.graded}
             onAdd={(course) => onAddUserCourse(module.id, course)}

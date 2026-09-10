@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   AddedCourse,
+  DEFAULT_VISIBLE_PLANNING_SEMESTERS,
+  MAX_PLANNED_SEMESTERS,
   NeuroModule,
   PlannedSemester,
   ProgramId,
@@ -16,6 +18,10 @@ import {
   computeModuleGrade,
 } from "@/lib/moduleGrades";
 import { getNumericGrade, weightedAverage } from "@/lib/gradeSelection";
+import {
+  buildHandbookPlannedSemesters,
+  collectPlanningItems,
+} from "@/lib/planning";
 
 function getThesisSubCourseId(module: NeuroModule | undefined): string | undefined {
   if (module?.structure?.type !== "subCourses") return undefined;
@@ -92,6 +98,10 @@ export function useProgramTracker(programId: ProgramId) {
   const [plannedSemesters, setPlannedSemesters] = useState<
     Record<string, PlannedSemester>
   >({});
+  const [planningVisibleSemesters, setPlanningVisibleSemesters] = useState(
+    DEFAULT_VISIBLE_PLANNING_SEMESTERS,
+  );
+  const [planningUnassigned, setPlanningUnassigned] = useState<string[]>([]);
 
   useEffect(() => {
     const data = readProgramData(programId);
@@ -107,6 +117,8 @@ export function useProgramTracker(programId: ProgramId) {
     setUserCourses(data.userCourses);
     setSlotSelections(data.slotSelections);
     setPlannedSemesters(data.plannedSemesters);
+    setPlanningVisibleSemesters(data.planningVisibleSemesters);
+    setPlanningUnassigned(data.planningUnassigned);
   }, [programId, thesisModule]);
 
   const persistGrades = (next: Record<string, number | string>) => {
@@ -133,6 +145,18 @@ export function useProgramTracker(programId: ProgramId) {
     next: Record<string, PlannedSemester>,
   ) => {
     writeJsonForProgram(programId, STORAGE_KEYS.plannedSemesters, next);
+  };
+
+  const persistPlanningVisibleSemesters = (next: number) => {
+    writeJsonForProgram(
+      programId,
+      STORAGE_KEYS.planningVisibleSemesters,
+      next,
+    );
+  };
+
+  const persistPlanningUnassigned = (next: string[]) => {
+    writeJsonForProgram(programId, STORAGE_KEYS.planningUnassigned, next);
   };
 
   const setGrade = (itemId: string, grade: number | string | "") => {
@@ -235,14 +259,54 @@ export function useProgramTracker(programId: ProgramId) {
     itemId: string,
     semester: PlannedSemester | "",
   ) => {
-    setPlannedSemesters((prev) => {
-      const next = { ...prev };
-      if (semester === "") {
+    if (semester === "") {
+      setPlannedSemesters((prev) => {
+        const next = { ...prev };
         delete next[itemId];
-      } else {
-        next[itemId] = semester;
-      }
+        persistPlannedSemesters(next);
+        return next;
+      });
+      setPlanningUnassigned((prev) => {
+        if (prev.includes(itemId)) return prev;
+        const next = [...prev, itemId];
+        persistPlanningUnassigned(next);
+        return next;
+      });
+      return;
+    }
+
+    setPlanningUnassigned((prev) => {
+      if (!prev.includes(itemId)) return prev;
+      const next = prev.filter((id) => id !== itemId);
+      persistPlanningUnassigned(next);
+      return next;
+    });
+    setPlannedSemesters((prev) => {
+      const next = { ...prev, [itemId]: semester };
       persistPlannedSemesters(next);
+      return next;
+    });
+  };
+
+  const resetPlanningToDefault = () => {
+    const items = collectPlanningItems(
+      programId,
+      userCourses,
+      slotSelections,
+    );
+    const next = buildHandbookPlannedSemesters(items);
+    setPlannedSemesters(next);
+    persistPlannedSemesters(next);
+    setPlanningUnassigned([]);
+    persistPlanningUnassigned([]);
+    setPlanningVisibleSemesters(DEFAULT_VISIBLE_PLANNING_SEMESTERS);
+    persistPlanningVisibleSemesters(DEFAULT_VISIBLE_PLANNING_SEMESTERS);
+  };
+
+  const addPlanningSemester = () => {
+    setPlanningVisibleSemesters((prev) => {
+      const next = Math.min(MAX_PLANNED_SEMESTERS, prev + 1);
+      persistPlanningVisibleSemesters(next);
       return next;
     });
   };
@@ -342,11 +406,15 @@ export function useProgramTracker(programId: ProgramId) {
     userCourses,
     slotSelections,
     plannedSemesters,
+    planningVisibleSemesters,
+    planningUnassigned,
     setGrade,
     setThesisGrade,
     toggleModule,
     setSlotSelection,
     setPlannedSemester,
+    resetPlanningToDefault,
+    addPlanningSemester,
     addUserCourse,
     removeUserCourse,
     getModuleGrade,

@@ -20,6 +20,26 @@ export function getGroupColor(group: ModuleGroup): string {
   }
 }
 
+export function getGroupAccentBar(group: ModuleGroup): string {
+  switch (group) {
+    case "foundations":
+    case "core":
+      return "bg-blue-500";
+    case "advanced":
+      return "bg-indigo-500";
+    case "electives":
+      return "bg-amber-500";
+    case "research":
+      return "bg-teal-500";
+    case "thesis":
+      return "bg-purple-500";
+    default: {
+      const _exhaustive: never = group;
+      return _exhaustive;
+    }
+  }
+}
+
 export function getGroupBackground(group: ModuleGroup): string {
   switch (group) {
     case "foundations":

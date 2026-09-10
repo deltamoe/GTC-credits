@@ -30,11 +30,15 @@ export function ProgramView({
     userCourses,
     slotSelections,
     plannedSemesters,
+    planningVisibleSemesters,
+    planningUnassigned,
     setGrade,
     setThesisGrade,
     toggleModule,
     setSlotSelection,
     setPlannedSemester,
+    resetPlanningToDefault,
+    addPlanningSemester,
     addUserCourse,
     removeUserCourse,
     getModuleGrade,
@@ -46,22 +50,27 @@ export function ProgramView({
     overallProgress,
   } = useProgramTracker(programId);
 
+  const showModuleView = !(planningMode && programId === "nb");
+
   return (
     <div className="space-y-6">
-      <OverallProgress
-        title={`Overall Progress (${config.shortLabel})`}
-        overallProgress={overallProgress}
-        totalCompletedCredits={totalCompletedCredits}
-        totalRequiredCredits={totalRequiredCredits}
-        currentWeightedGrade={null}
-        courseworkGrade={courseworkGrade}
-        finalGrade={finalGrade}
-        thesisGrade={thesisGrade}
-        thesisCompleted={thesisCompleted}
-        finalGradeRatioLabel={config.finalGradeRatioLabel}
-      />
+      {showModuleView && (
+        <OverallProgress
+          title={`Overall Progress (${config.shortLabel})`}
+          overallProgress={overallProgress}
+          totalCompletedCredits={totalCompletedCredits}
+          totalRequiredCredits={totalRequiredCredits}
+          currentWeightedGrade={null}
+          courseworkGrade={courseworkGrade}
+          finalGrade={finalGrade}
+          thesisGrade={thesisGrade}
+          thesisCompleted={thesisCompleted}
+          finalGradeRatioLabel={config.finalGradeRatioLabel}
+        />
+      )}
 
-      {config.groups.map((group) => {
+      {showModuleView &&
+        config.groups.map((group) => {
         const modules = getModulesByGroup(programId, group.id);
         if (modules.length === 0) return null;
 
@@ -102,8 +111,6 @@ export function ProgramView({
                       onRemoveUserCourse={removeUserCourse}
                       isExporting={isExporting}
                       planningMode={planningMode}
-                      plannedSemesters={plannedSemesters}
-                      onSetPlannedSemester={setPlannedSemester}
                     />
                   );
                 }
@@ -141,6 +148,11 @@ export function ProgramView({
           userCourses={userCourses}
           slotSelections={slotSelections}
           plannedSemesters={plannedSemesters}
+          planningUnassigned={planningUnassigned}
+          planningVisibleSemesters={planningVisibleSemesters}
+          onSetPlannedSemester={setPlannedSemester}
+          onResetToDefault={resetPlanningToDefault}
+          onAddSemester={addPlanningSemester}
         />
       )}
     </div>

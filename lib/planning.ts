@@ -1,8 +1,10 @@
 import { getProgramConfig } from "@/app/constants/programs";
 import {
   AddedCourse,
+  DEFAULT_VISIBLE_PLANNING_SEMESTERS,
   HandbookSemester,
   MAX_PLANNED_SEMESTERS,
+  ModuleGroup,
   NeuroModule,
   PlannedSemester,
   ProgramId,
@@ -14,10 +16,13 @@ export const PLACEHOLDER_CREDITS = 3;
 
 export interface PlanningItem {
   id: string;
+  moduleId: string;
   moduleCode: string;
+  moduleGroup: ModuleGroup;
   name: string;
   credits: number;
   handbookSemester?: HandbookSemester;
+  graded: boolean;
   isPlaceholder?: boolean;
 }
 
@@ -50,7 +55,11 @@ export function getEffectiveSemester(
   itemId: string,
   handbookSemester: HandbookSemester | undefined,
   plannedSemesters: Record<string, PlannedSemester>,
+  planningUnassigned: string[] = [],
 ): PlannedSemester | undefined {
+  if (planningUnassigned.includes(itemId)) {
+    return undefined;
+  }
   return plannedSemesters[itemId] ?? handbookSemester;
 }
 
@@ -58,7 +67,8 @@ export function buildPlaceholders(
   module: NeuroModule,
   userCourses: Record<string, AddedCourse[]>,
 ): PlanningItem[] {
-  if (module.structure?.type !== "userAdded") return [];
+  const structure = module.structure;
+  if (structure?.type !== "userAdded") return [];
   if (!USER_ADDED_MODULE_IDS.includes(module.id as (typeof USER_ADDED_MODULE_IDS)[number])) {
     return [];
   }
@@ -67,17 +77,20 @@ export function buildPlaceholders(
     (sum, course) => sum + course.credits,
     0,
   );
-  const missingCredits = module.structure.targetCredits - addedCredits;
+  const missingCredits = structure.targetCredits - addedCredits;
   const count = placeholderCount(missingCredits);
 
   return Array.from({ length: count }, (_, index) => {
     const courseIndex = (userCourses[module.id] ?? []).length + index;
     return {
       id: placeholderId(module.id, index),
+      moduleId: module.id,
       moduleCode: module.code,
+      moduleGroup: module.group,
       name: "Planned course (3 CP)",
       credits: PLACEHOLDER_CREDITS,
       handbookSemester: userAddedHandbookSemester(module.id, courseIndex),
+      graded: structure.graded,
       isPlaceholder: true,
     };
   });
@@ -100,10 +113,13 @@ export function collectPlanningItems(
         for (const subCourse of structure.subCourses) {
           items.push({
             id: subCourse.id,
+            moduleId: module.id,
             moduleCode: module.code,
+            moduleGroup: module.group,
             name: subCourse.name,
             credits: subCourse.credits,
             handbookSemester: subCourse.handbookSemester,
+            graded: subCourse.graded,
           });
         }
         break;
@@ -113,10 +129,13 @@ export function collectPlanningItems(
           const option = slot.options.find((entry) => entry.id === optionId);
           items.push({
             id: slot.id,
+            moduleId: module.id,
             moduleCode: module.code,
+            moduleGroup: module.group,
             name: option?.name ?? slot.label,
             credits: slot.credits,
             handbookSemester: slot.handbookSemester,
+            graded: slot.graded,
           });
         }
         break;
@@ -124,10 +143,13 @@ export function collectPlanningItems(
         for (const [index, course] of (userCourses[module.id] ?? []).entries()) {
           items.push({
             id: course.id,
+            moduleId: module.id,
             moduleCode: module.code,
+            moduleGroup: module.group,
             name: course.name,
             credits: course.credits,
             handbookSemester: userAddedHandbookSemester(module.id, index),
+            graded: course.graded,
           });
         }
         items.push(...buildPlaceholders(module, userCourses));
@@ -144,43 +166,138 @@ export function collectPlanningItems(
   return items;
 }
 
-const SEMESTER_ORDER: (PlannedSemester | "unassigned")[] = [
-  ...Array.from(
-    { length: MAX_PLANNED_SEMESTERS },
-    (_, index) => (index + 1) as PlannedSemester,
-  ),
-  "unassigned",
-];
+function getSemesterOrder(
+  visibleSemesters: number,
+): (PlannedSemester | "unassigned")[] {
+  const clampedVisible = Math.min(
+    MAX_PLANNED_SEMESTERS,
+    Math.max(DEFAULT_VISIBLE_PLANNING_SEMESTERS, visibleSemesters),
+  );
+
+  return [
+    ...Array.from(
+      { length: clampedVisible },
+      (_, index) => (index + 1) as PlannedSemester,
+    ),
+    "unassigned",
+  ];
+}
+
+function resolveDisplaySemester(
+  item: PlanningItem,
+  plannedSemesters: Record<string, PlannedSemester>,
+  planningUnassigned: string[],
+  visibleSemesters: number,
+): PlannedSemester | "unassigned" {
+  const semester =
+    getEffectiveSemester(
+      item.id,
+      item.handbookSemester,
+      plannedSemesters,
+      planningUnassigned,
+    ) ?? "unassigned";
+
+  if (semester !== "unassigned" && semester > visibleSemesters) {
+    return "unassigned";
+  }
+
+  return semester;
+}
+
+function bucketItemsBySemester(
+  items: PlanningItem[],
+  plannedSemesters: Record<string, PlannedSemester>,
+  planningUnassigned: string[],
+  visibleSemesters: number,
+): Map<PlannedSemester | "unassigned", PlanningItem[]> {
+  const semesterOrder = getSemesterOrder(visibleSemesters);
+  const buckets = new Map<PlannedSemester | "unassigned", PlanningItem[]>();
+  for (const semester of semesterOrder) {
+    buckets.set(semester, []);
+  }
+
+  for (const item of items) {
+    const semester = resolveDisplaySemester(
+      item,
+      plannedSemesters,
+      planningUnassigned,
+      visibleSemesters,
+    );
+    buckets.get(semester)?.push(item);
+  }
+
+  return buckets;
+}
+
+function toSemesterGroups(
+  buckets: Map<PlannedSemester | "unassigned", PlanningItem[]>,
+  semesterOrder: (PlannedSemester | "unassigned")[],
+  includeEmpty: boolean,
+): SemesterGroup[] {
+  const semesters = includeEmpty
+    ? semesterOrder
+    : semesterOrder.filter(
+        (semester) => (buckets.get(semester)?.length ?? 0) > 0,
+      );
+
+  return semesters.map((semester) => {
+    const groupItems = buckets.get(semester) ?? [];
+    return {
+      semester,
+      label:
+        semester === "unassigned" ? "Unassigned" : `Semester ${semester}`,
+      items: groupItems,
+      totalCredits: groupItems.reduce((sum, item) => sum + item.credits, 0),
+    };
+  });
+}
+
+export function buildHandbookPlannedSemesters(
+  items: PlanningItem[],
+): Record<string, PlannedSemester> {
+  const result: Record<string, PlannedSemester> = {};
+  for (const item of items) {
+    if (item.handbookSemester !== undefined) {
+      result[item.id] = item.handbookSemester;
+    }
+  }
+  return result;
+}
 
 export function groupBySemester(
   items: PlanningItem[],
   plannedSemesters: Record<string, PlannedSemester>,
+  planningUnassigned: string[] = [],
+  visibleSemesters: number = DEFAULT_VISIBLE_PLANNING_SEMESTERS,
 ): SemesterGroup[] {
-  const buckets = new Map<PlannedSemester | "unassigned", PlanningItem[]>();
+  const semesterOrder = getSemesterOrder(visibleSemesters);
+  return toSemesterGroups(
+    bucketItemsBySemester(
+      items,
+      plannedSemesters,
+      planningUnassigned,
+      visibleSemesters,
+    ),
+    semesterOrder,
+    false,
+  );
+}
 
-  for (const item of items) {
-    const semester =
-      getEffectiveSemester(item.id, item.handbookSemester, plannedSemesters) ??
-      "unassigned";
-    const bucket = buckets.get(semester) ?? [];
-    bucket.push(item);
-    buckets.set(semester, bucket);
-  }
-
-  const semesterOrder = SEMESTER_ORDER;
-
-  return semesterOrder
-    .filter((semester) => buckets.has(semester))
-    .map((semester) => {
-      const groupItems = buckets.get(semester) ?? [];
-      return {
-        semester,
-        label:
-          semester === "unassigned"
-            ? "Unassigned"
-            : `Semester ${semester}`,
-        items: groupItems,
-        totalCredits: groupItems.reduce((sum, item) => sum + item.credits, 0),
-      };
-    });
+export function getSemesterBoardGroups(
+  items: PlanningItem[],
+  plannedSemesters: Record<string, PlannedSemester>,
+  planningUnassigned: string[] = [],
+  visibleSemesters: number = DEFAULT_VISIBLE_PLANNING_SEMESTERS,
+): SemesterGroup[] {
+  const semesterOrder = getSemesterOrder(visibleSemesters);
+  return toSemesterGroups(
+    bucketItemsBySemester(
+      items,
+      plannedSemesters,
+      planningUnassigned,
+      visibleSemesters,
+    ),
+    semesterOrder,
+    true,
+  );
 }

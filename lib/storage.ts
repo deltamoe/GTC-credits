@@ -3,6 +3,8 @@ import {
   CombinedExportPayload,
   CombinedExportPayloadV3,
   CombinedExportPayloadV4,
+  DEFAULT_VISIBLE_PLANNING_SEMESTERS,
+  MAX_PLANNED_SEMESTERS,
   PlannedSemester,
   ProgramExportPayload,
   ProgramId,
@@ -16,6 +18,8 @@ const DEFAULT_PROGRAM_DATA: ProgramExportPayload = {
   userCourses: {},
   slotSelections: {},
   plannedSemesters: {},
+  planningUnassigned: [],
+  planningVisibleSemesters: DEFAULT_VISIBLE_PLANNING_SEMESTERS,
 };
 
 export function storageKey(programId: ProgramId, suffix: string): string {
@@ -31,6 +35,8 @@ export const STORAGE_KEYS = {
   userCourses: "userCourses",
   slotSelections: "slotSelections",
   plannedSemesters: "plannedSemesters",
+  planningUnassigned: "planningUnassigned",
+  planningVisibleSemesters: "planningVisibleSemesters",
 } as const;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -132,6 +138,21 @@ function isPlannedSemester(value: unknown): value is PlannedSemester {
   );
 }
 
+function normalizePlanningVisibleSemesters(raw: unknown): number {
+  if (typeof raw !== "number" || !Number.isInteger(raw)) {
+    return DEFAULT_VISIBLE_PLANNING_SEMESTERS;
+  }
+  return Math.min(
+    MAX_PLANNED_SEMESTERS,
+    Math.max(DEFAULT_VISIBLE_PLANNING_SEMESTERS, raw),
+  );
+}
+
+function normalizePlanningUnassigned(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((itemId): itemId is string => typeof itemId === "string");
+}
+
 function normalizePlannedSemesters(
   raw: unknown,
 ): Record<string, PlannedSemester> {
@@ -163,6 +184,10 @@ function normalizeProgramPayload(raw: unknown): ProgramExportPayload {
     userCourses: normalizeUserCourses(data.userCourses),
     slotSelections: normalizeSlotSelections(data.slotSelections),
     plannedSemesters: normalizePlannedSemesters(data.plannedSemesters),
+    planningUnassigned: normalizePlanningUnassigned(data.planningUnassigned),
+    planningVisibleSemesters: normalizePlanningVisibleSemesters(
+      data.planningVisibleSemesters,
+    ),
   };
 }
 
@@ -192,6 +217,14 @@ export function readProgramData(programId: ProgramId): ProgramExportPayload {
       storageKey(programId, STORAGE_KEYS.plannedSemesters),
       DEFAULT_PROGRAM_DATA.plannedSemesters,
     ),
+    planningUnassigned: readJson(
+      storageKey(programId, STORAGE_KEYS.planningUnassigned),
+      DEFAULT_PROGRAM_DATA.planningUnassigned,
+    ),
+    planningVisibleSemesters: readJson(
+      storageKey(programId, STORAGE_KEYS.planningVisibleSemesters),
+      DEFAULT_PROGRAM_DATA.planningVisibleSemesters,
+    ),
   };
 }
 
@@ -213,6 +246,14 @@ export function writeProgramData(
   writeJson(
     storageKey(programId, STORAGE_KEYS.plannedSemesters),
     data.plannedSemesters,
+  );
+  writeJson(
+    storageKey(programId, STORAGE_KEYS.planningUnassigned),
+    data.planningUnassigned,
+  );
+  writeJson(
+    storageKey(programId, STORAGE_KEYS.planningVisibleSemesters),
+    data.planningVisibleSemesters,
   );
 }
 

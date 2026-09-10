@@ -23,6 +23,7 @@ export type PlannedSemester =
   | 8;
 
 export const MAX_PLANNED_SEMESTERS = 8;
+export const DEFAULT_VISIBLE_PLANNING_SEMESTERS = 4;
 
 export interface NeuroSubCourse {
   id: string;
@@ -79,6 +80,8 @@ export interface ProgramExportPayload {
   userCourses: Record<string, AddedCourse[]>;
   slotSelections: Record<string, string>;
   plannedSemesters: Record<string, PlannedSemester>;
+  planningUnassigned: string[];
+  planningVisibleSemesters: number;
 }
 
 export interface CombinedExportPayload {
