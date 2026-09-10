@@ -4,15 +4,15 @@ export function getGroupColor(group: ModuleGroup): string {
   switch (group) {
     case "foundations":
     case "core":
-      return "border-blue-500";
+      return "border-l-blue-500";
     case "advanced":
-      return "border-indigo-500";
+      return "border-l-indigo-500";
     case "electives":
-      return "border-amber-500";
+      return "border-l-amber-500";
     case "research":
-      return "border-teal-500";
+      return "border-l-teal-500";
     case "thesis":
-      return "border-purple-500";
+      return "border-l-purple-500";
     default: {
       const _exhaustive: never = group;
       return _exhaustive;

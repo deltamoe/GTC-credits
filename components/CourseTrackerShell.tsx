@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProgramView } from "@/components/ProgramView";
 import { ProgramId } from "@/app/types";
@@ -41,9 +39,9 @@ export function CourseTrackerShell() {
     setPlanningMode(readPlanningMode());
   }, []);
 
-  const handlePlanningModeChange = (enabled: boolean) => {
-    setPlanningMode(enabled);
-    writePlanningMode(enabled);
+  const handleViewModeChange = (planning: boolean) => {
+    setPlanningMode(planning);
+    writePlanningMode(planning);
   };
 
   const handleProgramChange = (next: ProgramId) => {
@@ -212,41 +210,57 @@ export function CourseTrackerShell() {
   };
 
   return (
-    <div className="relative max-w-4xl mx-auto p-4 space-y-6">
-      {program === "nb" && (
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-          <Label htmlFor="planning-mode" className="text-sm text-gray-700">
-            Planning mode
-          </Label>
-          <Switch
-            id="planning-mode"
-            checked={planningMode}
-            onCheckedChange={handlePlanningModeChange}
-          />
-        </div>
-      )}
-
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="bg-orange-100 border border-orange-300 rounded-lg p-6 text-center">
         <h1 className="text-3xl font-bold text-black mb-4">
           GTC Neuroscience Credit Calculator
         </h1>
 
-        <div className="inline-flex flex-wrap justify-center rounded-lg border border-orange-300 bg-white p-1 mb-4 gap-1">
-          {PROGRAM_IDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              title={PROGRAMS[id].fullName}
-              onClick={() => handleProgramChange(id)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                program === id
-                  ? "bg-orange-500 text-white"
-                  : "text-gray-700 hover:bg-orange-50"
-              }`}
-            >
-              {PROGRAMS[id].shortLabel}
-            </button>
-          ))}
+        <div className="flex flex-col items-center gap-3 mb-4">
+          <div className="inline-flex flex-wrap justify-center rounded-lg border border-orange-300 bg-white p-1 gap-1">
+            {PROGRAM_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                title={PROGRAMS[id].fullName}
+                onClick={() => handleProgramChange(id)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  program === id
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-700 hover:bg-orange-50"
+                }`}
+              >
+                {PROGRAMS[id].shortLabel}
+              </button>
+            ))}
+          </div>
+
+          {program === "nb" && (
+            <div className="inline-flex flex-wrap justify-center rounded-lg border border-orange-300 bg-white p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => handleViewModeChange(false)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  !planningMode
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-700 hover:bg-orange-50"
+                }`}
+              >
+                Grade overview
+              </button>
+              <button
+                type="button"
+                onClick={() => handleViewModeChange(true)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  planningMode
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-700 hover:bg-orange-50"
+                }`}
+              >
+                Planning mode
+              </button>
+            </div>
+          )}
         </div>
 
         <p className="text-lg text-gray-800 mb-2">{activeConfig.fullName}</p>
