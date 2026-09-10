@@ -257,7 +257,7 @@ export function CourseTrackerShell() {
           rel="noopener noreferrer"
           className="underline text-orange-600 hover:text-orange-800 text-sm block"
         >
-          Official program information (Eberhard Karls University of Tübingen)
+          Official program information
         </a>
       </div>
 
