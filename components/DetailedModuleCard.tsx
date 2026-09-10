@@ -13,8 +13,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { validGrades } from "@/app/constants/programs";
-import { AddedCourse, NeuroModule } from "@/app/types";
+import {
+  AddedCourse,
+  HandbookSemester,
+  MAX_PLANNED_SEMESTERS,
+  NeuroModule,
+  PlannedSemester,
+} from "@/app/types";
 import { getGroupColor } from "@/app/utils/colors";
+import {
+  buildPlaceholders,
+  userAddedHandbookSemester,
+} from "@/lib/planning";
 
 interface DetailedModuleCardProps {
   module: NeuroModule;
@@ -35,6 +45,12 @@ interface DetailedModuleCardProps {
   ) => void;
   onRemoveUserCourse: (moduleId: string, courseId: string) => void;
   isExporting?: boolean;
+  planningMode?: boolean;
+  plannedSemesters: Record<string, PlannedSemester>;
+  onSetPlannedSemester: (
+    itemId: string,
+    semester: PlannedSemester | "",
+  ) => void;
 }
 
 function GradeSelect({
@@ -79,6 +95,48 @@ function GradeSelect({
   );
 }
 
+function SemesterInput({
+  itemId,
+  handbookSemester,
+  plannedSemesters,
+  onSetPlannedSemester,
+}: {
+  itemId: string;
+  handbookSemester?: HandbookSemester;
+  plannedSemesters: Record<string, PlannedSemester>;
+  onSetPlannedSemester: (
+    itemId: string,
+    semester: PlannedSemester | "",
+  ) => void;
+}) {
+  const value = plannedSemesters[itemId];
+
+  return (
+    <Input
+      type="number"
+      min={1}
+      max={MAX_PLANNED_SEMESTERS}
+      placeholder={
+        handbookSemester !== undefined ? String(handbookSemester) : "Sem"
+      }
+      value={value ?? ""}
+      onChange={(event) => {
+        const raw = event.target.value;
+        if (raw === "") {
+          onSetPlannedSemester(itemId, "");
+          return;
+        }
+        const parsed = Number.parseInt(raw, 10);
+        if (parsed >= 1 && parsed <= MAX_PLANNED_SEMESTERS) {
+          onSetPlannedSemester(itemId, parsed as PlannedSemester);
+        }
+      }}
+      className="w-16 text-center"
+      aria-label="Planned semester"
+    />
+  );
+}
+
 function StatusBadge({ graded }: { graded: boolean }) {
   return (
     <span
@@ -104,6 +162,10 @@ function SubCourseRow({
   onSetGrade,
   onToggleCompletion,
   isExporting,
+  planningMode,
+  handbookSemester,
+  plannedSemesters,
+  onSetPlannedSemester,
 }: {
   id: string;
   name: string;
@@ -115,6 +177,13 @@ function SubCourseRow({
   onSetGrade: (itemId: string, grade: number | string | "") => void;
   onToggleCompletion: (itemId: string) => void;
   isExporting?: boolean;
+  planningMode?: boolean;
+  handbookSemester?: HandbookSemester;
+  plannedSemesters: Record<string, PlannedSemester>;
+  onSetPlannedSemester: (
+    itemId: string,
+    semester: PlannedSemester | "",
+  ) => void;
 }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-gray-100">
@@ -128,7 +197,15 @@ function SubCourseRow({
         </div>
         <p className="text-sm text-gray-900 mt-0.5">{name}</p>
       </div>
-      <div className="shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
+        {planningMode && (
+          <SemesterInput
+            itemId={id}
+            handbookSemester={handbookSemester}
+            plannedSemesters={plannedSemesters}
+            onSetPlannedSemester={onSetPlannedSemester}
+          />
+        )}
         {graded ? (
           <GradeSelect
             value={grade}
@@ -149,6 +226,45 @@ function SubCourseRow({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function PlaceholderCourseRow({
+  id,
+  name,
+  credits,
+  handbookSemester,
+  plannedSemesters,
+  onSetPlannedSemester,
+}: {
+  id: string;
+  name: string;
+  credits: number;
+  handbookSemester?: HandbookSemester;
+  plannedSemesters: Record<string, PlannedSemester>;
+  onSetPlannedSemester: (
+    itemId: string,
+    semester: PlannedSemester | "",
+  ) => void;
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-dashed border-gray-300">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-gray-500">{credits} CP</span>
+          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+            Planned
+          </span>
+        </div>
+        <p className="text-sm text-gray-600 italic">{name}</p>
+      </div>
+      <SemesterInput
+        itemId={id}
+        handbookSemester={handbookSemester}
+        plannedSemesters={plannedSemesters}
+        onSetPlannedSemester={onSetPlannedSemester}
+      />
     </div>
   );
 }
@@ -236,9 +352,16 @@ export function DetailedModuleCard({
   onAddUserCourse,
   onRemoveUserCourse,
   isExporting = false,
+  planningMode = false,
+  plannedSemesters,
+  onSetPlannedSemester,
 }: DetailedModuleCardProps) {
   const borderColor = getGroupColor(module.group);
   const structure = module.structure;
+  const placeholders =
+    planningMode && structure?.type === "userAdded"
+      ? buildPlaceholders(module, userCourses)
+      : [];
 
   return (
     <div
@@ -294,6 +417,10 @@ export function DetailedModuleCard({
               onSetGrade={onSetGrade}
               onToggleCompletion={onToggleCompletion}
               isExporting={isExporting}
+              planningMode={planningMode}
+              handbookSemester={subCourse.handbookSemester}
+              plannedSemesters={plannedSemesters}
+              onSetPlannedSemester={onSetPlannedSemester}
             />
           ))}
         </div>
@@ -331,6 +458,14 @@ export function DetailedModuleCard({
                       ))}
                     </SelectContent>
                   </Select>
+                  {planningMode && (
+                    <SemesterInput
+                      itemId={slot.id}
+                      handbookSemester={slot.handbookSemester}
+                      plannedSemesters={plannedSemesters}
+                      onSetPlannedSemester={onSetPlannedSemester}
+                    />
+                  )}
                   {slot.graded ? (
                     <GradeSelect
                       value={grades[slot.id]}
@@ -367,7 +502,7 @@ export function DetailedModuleCard({
                 : " · Not counted in final grade"}
             </p>
           )}
-          {(userCourses[module.id] ?? []).map((course) => (
+          {(userCourses[module.id] ?? []).map((course, index) => (
             <div
               key={course.id}
               className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-gray-100"
@@ -382,6 +517,17 @@ export function DetailedModuleCard({
                 <p className="text-sm text-gray-900">{course.name}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {planningMode && (
+                  <SemesterInput
+                    itemId={course.id}
+                    handbookSemester={userAddedHandbookSemester(
+                      module.id,
+                      index,
+                    )}
+                    plannedSemesters={plannedSemesters}
+                    onSetPlannedSemester={onSetPlannedSemester}
+                  />
+                )}
                 {course.graded ? (
                   <GradeSelect
                     value={grades[course.id]}
@@ -413,6 +559,17 @@ export function DetailedModuleCard({
                 )}
               </div>
             </div>
+          ))}
+          {placeholders.map((placeholder) => (
+            <PlaceholderCourseRow
+              key={placeholder.id}
+              id={placeholder.id}
+              name={placeholder.name}
+              credits={placeholder.credits}
+              handbookSemester={placeholder.handbookSemester}
+              plannedSemesters={plannedSemesters}
+              onSetPlannedSemester={onSetPlannedSemester}
+            />
           ))}
           <AddCourseForm
             defaultGraded={structure.graded}

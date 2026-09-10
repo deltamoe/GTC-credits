@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProgramView } from "@/components/ProgramView";
 import { ProgramId } from "@/app/types";
@@ -11,8 +13,10 @@ import {
   getActiveProgramServerSnapshot,
   getActiveProgramSnapshot,
   importAllData,
+  readPlanningMode,
   subscribeActiveProgram,
   writeActiveProgram,
+  writePlanningMode,
 } from "@/lib/storage";
 import { getErrorMessage, reportClientError } from "@/lib/errors";
 import { SITE_URL } from "@/lib/site";
@@ -29,8 +33,18 @@ export function CourseTrackerShell() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [planningMode, setPlanningMode] = useState(false);
 
   const activeConfig = PROGRAMS[program];
+
+  useEffect(() => {
+    setPlanningMode(readPlanningMode());
+  }, []);
+
+  const handlePlanningModeChange = (enabled: boolean) => {
+    setPlanningMode(enabled);
+    writePlanningMode(enabled);
+  };
 
   const handleProgramChange = (next: ProgramId) => {
     writeActiveProgram(next);
@@ -198,7 +212,20 @@ export function CourseTrackerShell() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
+    <div className="relative max-w-4xl mx-auto p-4 space-y-6">
+      {program === "nb" && (
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+          <Label htmlFor="planning-mode" className="text-sm text-gray-700">
+            Planning mode
+          </Label>
+          <Switch
+            id="planning-mode"
+            checked={planningMode}
+            onCheckedChange={handlePlanningModeChange}
+          />
+        </div>
+      )}
+
       <div className="bg-orange-100 border border-orange-300 rounded-lg p-6 text-center">
         <h1 className="text-3xl font-bold text-black mb-4">
           GTC Neuroscience Credit Calculator
@@ -230,12 +257,17 @@ export function CourseTrackerShell() {
           rel="noopener noreferrer"
           className="underline text-orange-600 hover:text-orange-800 text-sm block"
         >
-          Official program information (University of Tübingen)
+          Official program information (Eberhard Karls University of Tübingen)
         </a>
       </div>
 
       <div ref={contentRef}>
-        <ProgramView key={remountKey} programId={program} isExporting={isExporting} />
+        <ProgramView
+          key={remountKey}
+          programId={program}
+          isExporting={isExporting}
+          planningMode={program === "nb" ? planningMode : false}
+        />
       </div>
 
       <SiteFooter
@@ -264,7 +296,7 @@ export function CourseTrackerShell() {
             </div>
             <p className="text-xs text-gray-500 max-w-xl">
               JSON export includes data for all three programs (NB, CN, CM).
-              Version 4 backups include detailed NB sub-course data.
+              Version 5 backups include detailed NB sub-course and planning data.
             </p>
           </>
         }

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { LegalPageLayout } from "@/components/LegalPageLayout";
-import { CONTACT_EMAIL } from "@/lib/site";
+import {
+  CONTACT_TELEGRAM,
+  CONTACT_TELEGRAM_URL,
+  SITE_OPERATOR,
+} from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Legal Notice | GTC Neuroscience Credits",
@@ -13,16 +17,15 @@ export default function ImpressumPage() {
       <section className="space-y-2">
         <h2>Information pursuant to § 5 DDG</h2>
         <p>
-          Luca Saur
-          <br />
-          Lange Straße 13
-          <br />
-          49080 Osnabrück
+          {SITE_OPERATOR}
           <br />
           Germany
         </p>
         <p>
-          Email: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          Telegram:{" "}
+          <a href={CONTACT_TELEGRAM_URL} target="_blank" rel="noopener noreferrer">
+            {CONTACT_TELEGRAM}
+          </a>
         </p>
         <p className="text-gray-500">
           This is a private, non-commercial hobby project.
@@ -31,11 +34,7 @@ export default function ImpressumPage() {
 
       <section className="space-y-2">
         <h2>Responsible for content pursuant to § 18 (2) MStV</h2>
-        <p>
-          Luca Saur
-          <br />
-          Address as above
-        </p>
+        <p>{SITE_OPERATOR}</p>
       </section>
 
       <section className="space-y-2">
@@ -48,7 +47,7 @@ export default function ImpressumPage() {
         </p>
         <p>
           This tool is not officially affiliated with, endorsed by, or connected
-          to the University of Tübingen and is provided for informational
+          to the Eberhard Karls University of Tübingen and is provided for informational
           purposes only.
         </p>
       </section>

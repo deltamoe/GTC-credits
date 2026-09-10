@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "GTC Neuroscience Credits",
   description:
-    "Track credits and calculate grades for the Graduate Training Centre of Neuroscience M.Sc. programs at the University of Tübingen",
+    "Track credits and calculate grades for the Graduate Training Centre of Neuroscience M.Sc. programs at the Eberhard Karls University of Tübingen",
 };
 
 export default function RootLayout({

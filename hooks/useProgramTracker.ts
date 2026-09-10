@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { AddedCourse, NeuroModule, ProgramId } from "@/app/types";
+import {
+  AddedCourse,
+  NeuroModule,
+  PlannedSemester,
+  ProgramId,
+} from "@/app/types";
 import {
   getGradedModulesForFinalGrade,
   getProgramConfig,
@@ -84,6 +89,9 @@ export function useProgramTracker(programId: ProgramId) {
   const [slotSelections, setSlotSelections] = useState<Record<string, string>>(
     {},
   );
+  const [plannedSemesters, setPlannedSemesters] = useState<
+    Record<string, PlannedSemester>
+  >({});
 
   useEffect(() => {
     const data = readProgramData(programId);
@@ -98,6 +106,7 @@ export function useProgramTracker(programId: ProgramId) {
     setThesisGradeState(synced.thesisGrade);
     setUserCourses(data.userCourses);
     setSlotSelections(data.slotSelections);
+    setPlannedSemesters(data.plannedSemesters);
   }, [programId, thesisModule]);
 
   const persistGrades = (next: Record<string, number | string>) => {
@@ -118,6 +127,12 @@ export function useProgramTracker(programId: ProgramId) {
 
   const persistSlotSelections = (next: Record<string, string>) => {
     writeJsonForProgram(programId, STORAGE_KEYS.slotSelections, next);
+  };
+
+  const persistPlannedSemesters = (
+    next: Record<string, PlannedSemester>,
+  ) => {
+    writeJsonForProgram(programId, STORAGE_KEYS.plannedSemesters, next);
   };
 
   const setGrade = (itemId: string, grade: number | string | "") => {
@@ -216,6 +231,22 @@ export function useProgramTracker(programId: ProgramId) {
     return courseId;
   };
 
+  const setPlannedSemester = (
+    itemId: string,
+    semester: PlannedSemester | "",
+  ) => {
+    setPlannedSemesters((prev) => {
+      const next = { ...prev };
+      if (semester === "") {
+        delete next[itemId];
+      } else {
+        next[itemId] = semester;
+      }
+      persistPlannedSemesters(next);
+      return next;
+    });
+  };
+
   const removeUserCourse = (moduleId: string, courseId: string) => {
     setUserCourses((prev) => {
       const next = {
@@ -228,6 +259,7 @@ export function useProgramTracker(programId: ProgramId) {
       return next;
     });
     setGrade(courseId, "");
+    setPlannedSemester(courseId, "");
     setCompletedModules((prev) => {
       if (!prev.includes(courseId)) return prev;
       const next = prev.filter((id) => id !== courseId);
@@ -309,10 +341,12 @@ export function useProgramTracker(programId: ProgramId) {
     thesisCompleted,
     userCourses,
     slotSelections,
+    plannedSemesters,
     setGrade,
     setThesisGrade,
     toggleModule,
     setSlotSelection,
+    setPlannedSemester,
     addUserCourse,
     removeUserCourse,
     getModuleGrade,

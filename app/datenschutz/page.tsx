@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageLayout } from "@/components/LegalPageLayout";
-import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
+import {
+  CONTACT_TELEGRAM,
+  CONTACT_TELEGRAM_URL,
+  SITE_OPERATOR,
+} from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | GTC Neuroscience Credits",
@@ -16,9 +20,12 @@ export default function DatenschutzPage() {
       <section className="space-y-2">
         <h2>1. Controller</h2>
         <p>
-          Luca Saur
+          {SITE_OPERATOR}
           <br />
-          Email: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          Telegram:{" "}
+          <a href={CONTACT_TELEGRAM_URL} target="_blank" rel="noopener noreferrer">
+            {CONTACT_TELEGRAM}
+          </a>
         </p>
         <p>
           (Address see <Link href="/impressum">Legal Notice</Link>.)
@@ -29,10 +36,10 @@ export default function DatenschutzPage() {
         <h2>2. Overview</h2>
         <p>
           &ldquo;GTC Neuroscience Credits&rdquo; (
-          <a href={SITE_URL}>coxi-credits.vercel.app</a>) is a free,
+          <a href="#">[URL placeholder]</a>) is a free,
           non-commercial online tool for tracking study progress and estimating
           grades in the M.Sc. programs at the Graduate Training Centre of
-          Neuroscience (University of Tübingen): Neural and Behavioural
+          Neuroscience (Eberhard Karls University of Tübingen): Neural and Behavioural
           Sciences, Computational Neuroscience, and Cellular and Molecular
           Neuroscience.
         </p>
@@ -192,7 +199,7 @@ export default function DatenschutzPage() {
         <h3>3.6 External links</h3>
         <p>The website links to external sites, including:</p>
         <ul>
-          <li>University of Tübingen program pages</li>
+          <li>Eberhard Karls University of Tübingen program pages</li>
           <li>GitHub (project source code)</li>
         </ul>
         <p>
@@ -258,8 +265,11 @@ export default function DatenschutzPage() {
           </li>
         </ul>
         <p>
-          To exercise your rights or for privacy questions, please contact:{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          To exercise your rights or for privacy questions, please contact via
+          Telegram:{" "}
+          <a href={CONTACT_TELEGRAM_URL} target="_blank" rel="noopener noreferrer">
+            {CONTACT_TELEGRAM}
+          </a>
         </p>
         <p>
           Supervisory authority:

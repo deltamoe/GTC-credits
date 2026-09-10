@@ -3,6 +3,9 @@ import { NB_MODULES } from "@/app/constants/nbModules";
 
 export const PROGRAM_IDS: ProgramId[] = ["nb", "cn", "cm"];
 
+const GTC_PROGRAM_INFO_URL = (slug: string) =>
+  `https://www.neuroschool-tuebingen.de/master/${slug}/courses-regulations-downloads/`;
+
 export const validGrades = [
   "-",
   "1.0",
@@ -257,7 +260,7 @@ export const PROGRAMS: Record<ProgramId, ProgramConfig> = {
     finalGradeRatioLabel: "3:1",
     courseworkWeight: 0.75,
     thesisWeight: 0.25,
-    infoUrl: "https://uni-tuebingen.de/en/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/interfakultaere-einrichtungen/graduierungsschule-neurowissenschaften/studium/master/neural-and-behavioural-sciences/",
+    infoUrl: GTC_PROGRAM_INFO_URL("neural-and-behavioral-sciences"),
     groups: [
       { id: "foundations", label: "Foundations" },
       { id: "advanced", label: "Advanced Specialisations" },
@@ -275,7 +278,7 @@ export const PROGRAMS: Record<ProgramId, ProgramConfig> = {
     finalGradeRatioLabel: "3:1",
     courseworkWeight: 0.75,
     thesisWeight: 0.25,
-    infoUrl: "https://uni-tuebingen.de/en/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/interfakultaere-einrichtungen/graduierungsschule-neurowissenschaften/studium/master/computational-neuroscience/",
+    infoUrl: GTC_PROGRAM_INFO_URL("computational-neuroscience"),
     groups: [
       { id: "core", label: "Core Modules" },
       { id: "electives", label: "Individual Perspectives" },
@@ -292,7 +295,7 @@ export const PROGRAMS: Record<ProgramId, ProgramConfig> = {
     finalGradeRatioLabel: "3:1",
     courseworkWeight: 0.75,
     thesisWeight: 0.25,
-    infoUrl: "https://uni-tuebingen.de/en/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/interfakultaere-einrichtungen/graduierungsschule-neurowissenschaften/studium/master/cellular-and-molecular-neuroscience/",
+    infoUrl: GTC_PROGRAM_INFO_URL("cellular-and-molecular-neuroscience"),
     groups: [
       { id: "core", label: "Core Modules" },
       { id: "electives", label: "Individual Perspectives" },

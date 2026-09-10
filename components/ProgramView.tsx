@@ -3,6 +3,7 @@
 import { OverallProgress } from "@/components/OverallProgress";
 import { ModuleCard } from "@/components/ModuleCard";
 import { DetailedModuleCard } from "@/components/DetailedModuleCard";
+import { SemesterPlanSummary } from "@/components/SemesterPlanSummary";
 import { useProgramTracker } from "@/hooks/useProgramTracker";
 import { getModulesByGroup } from "@/app/constants/programs";
 import { computeModuleCompletedCredits } from "@/lib/moduleGrades";
@@ -12,11 +13,13 @@ import { getGroupBackground } from "@/app/utils/colors";
 interface ProgramViewProps {
   programId: ProgramId;
   isExporting?: boolean;
+  planningMode?: boolean;
 }
 
 export function ProgramView({
   programId,
   isExporting = false,
+  planningMode = false,
 }: ProgramViewProps) {
   const {
     config,
@@ -26,10 +29,12 @@ export function ProgramView({
     thesisCompleted,
     userCourses,
     slotSelections,
+    plannedSemesters,
     setGrade,
     setThesisGrade,
     toggleModule,
     setSlotSelection,
+    setPlannedSemester,
     addUserCourse,
     removeUserCourse,
     getModuleGrade,
@@ -96,6 +101,9 @@ export function ProgramView({
                       onAddUserCourse={addUserCourse}
                       onRemoveUserCourse={removeUserCourse}
                       isExporting={isExporting}
+                      planningMode={planningMode}
+                      plannedSemesters={plannedSemesters}
+                      onSetPlannedSemester={setPlannedSemester}
                     />
                   );
                 }
@@ -126,6 +134,15 @@ export function ProgramView({
           </section>
         );
       })}
+
+      {planningMode && programId === "nb" && !isExporting && (
+        <SemesterPlanSummary
+          programId={programId}
+          userCourses={userCourses}
+          slotSelections={slotSelections}
+          plannedSemesters={plannedSemesters}
+        />
+      )}
     </div>
   );
 }

@@ -10,12 +10,27 @@ export type ModuleGroup =
 
 export type ModuleKind = "graded" | "completion" | "thesis";
 
+export type HandbookSemester = 1 | 2 | 3 | 4;
+
+export type PlannedSemester =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8;
+
+export const MAX_PLANNED_SEMESTERS = 8;
+
 export interface NeuroSubCourse {
   id: string;
   name: string;
   credits: number;
   graded: boolean;
   weight?: number;
+  handbookSemester?: HandbookSemester;
 }
 
 export interface GuidedSlotOption {
@@ -29,6 +44,7 @@ export interface GuidedSlot {
   credits: number;
   graded: boolean;
   options: GuidedSlotOption[];
+  handbookSemester?: HandbookSemester;
 }
 
 export interface AddedCourse {
@@ -62,12 +78,23 @@ export interface ProgramExportPayload {
   thesisGrade: number | null;
   userCourses: Record<string, AddedCourse[]>;
   slotSelections: Record<string, string>;
+  plannedSemesters: Record<string, PlannedSemester>;
 }
 
 export interface CombinedExportPayload {
-  version: 4;
+  version: 5;
   activeProgram?: ProgramId;
   programs: Record<ProgramId, ProgramExportPayload>;
+}
+
+/** @deprecated Use CombinedExportPayload v5 */
+export interface CombinedExportPayloadV4 {
+  version: 4;
+  activeProgram?: ProgramId;
+  programs: Record<
+    ProgramId,
+    Omit<ProgramExportPayload, "plannedSemesters">
+  >;
 }
 
 /** @deprecated Use CombinedExportPayload v4 */

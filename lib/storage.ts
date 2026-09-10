@@ -2,6 +2,8 @@ import {
   AddedCourse,
   CombinedExportPayload,
   CombinedExportPayloadV3,
+  CombinedExportPayloadV4,
+  PlannedSemester,
   ProgramExportPayload,
   ProgramId,
 } from "@/app/types";
@@ -13,6 +15,7 @@ const DEFAULT_PROGRAM_DATA: ProgramExportPayload = {
   thesisGrade: null,
   userCourses: {},
   slotSelections: {},
+  plannedSemesters: {},
 };
 
 export function storageKey(programId: ProgramId, suffix: string): string {
@@ -21,11 +24,13 @@ export function storageKey(programId: ProgramId, suffix: string): string {
 
 export const STORAGE_KEYS = {
   activeProgram: "activeProgram",
+  planningMode: "planningMode",
   grades: "grades",
   completedModules: "completedModules",
   thesisGrade: "thesisGrade",
   userCourses: "userCourses",
   slotSelections: "slotSelections",
+  plannedSemesters: "plannedSemesters",
 } as const;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -118,6 +123,28 @@ function normalizeSlotSelections(raw: unknown): Record<string, string> {
   return result;
 }
 
+function isPlannedSemester(value: unknown): value is PlannedSemester {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 8
+  );
+}
+
+function normalizePlannedSemesters(
+  raw: unknown,
+): Record<string, PlannedSemester> {
+  if (!raw || typeof raw !== "object") return {};
+  const result: Record<string, PlannedSemester> = {};
+  for (const [itemId, semester] of Object.entries(raw)) {
+    if (isPlannedSemester(semester)) {
+      result[itemId] = semester;
+    }
+  }
+  return result;
+}
+
 function normalizeProgramPayload(raw: unknown): ProgramExportPayload {
   if (!raw || typeof raw !== "object") {
     return { ...DEFAULT_PROGRAM_DATA };
@@ -135,6 +162,7 @@ function normalizeProgramPayload(raw: unknown): ProgramExportPayload {
       typeof data.thesisGrade === "number" ? data.thesisGrade : null,
     userCourses: normalizeUserCourses(data.userCourses),
     slotSelections: normalizeSlotSelections(data.slotSelections),
+    plannedSemesters: normalizePlannedSemesters(data.plannedSemesters),
   };
 }
 
@@ -160,6 +188,10 @@ export function readProgramData(programId: ProgramId): ProgramExportPayload {
       storageKey(programId, STORAGE_KEYS.slotSelections),
       DEFAULT_PROGRAM_DATA.slotSelections,
     ),
+    plannedSemesters: readJson(
+      storageKey(programId, STORAGE_KEYS.plannedSemesters),
+      DEFAULT_PROGRAM_DATA.plannedSemesters,
+    ),
   };
 }
 
@@ -178,11 +210,23 @@ export function writeProgramData(
     storageKey(programId, STORAGE_KEYS.slotSelections),
     data.slotSelections,
   );
+  writeJson(
+    storageKey(programId, STORAGE_KEYS.plannedSemesters),
+    data.plannedSemesters,
+  );
+}
+
+export function readPlanningMode(): boolean {
+  return readJson(STORAGE_KEYS.planningMode, false);
+}
+
+export function writePlanningMode(enabled: boolean): void {
+  writeJson(STORAGE_KEYS.planningMode, enabled);
 }
 
 export function exportAllData(): string {
   const payload: CombinedExportPayload = {
-    version: 4,
+    version: 5,
     activeProgram: readActiveProgram(),
     programs: {
       nb: readProgramData("nb"),
@@ -193,9 +237,15 @@ export function exportAllData(): string {
   return JSON.stringify(payload);
 }
 
-function isCombinedV4(payload: unknown): payload is CombinedExportPayload {
+function isCombinedV5(payload: unknown): payload is CombinedExportPayload {
   if (!payload || typeof payload !== "object") return false;
   const data = payload as CombinedExportPayload;
+  return data.version === 5 && data.programs != null;
+}
+
+function isCombinedV4(payload: unknown): payload is CombinedExportPayloadV4 {
+  if (!payload || typeof payload !== "object") return false;
+  const data = payload as CombinedExportPayloadV4;
   return data.version === 4 && data.programs != null;
 }
 
@@ -206,6 +256,22 @@ function isCombinedV3(payload: unknown): payload is CombinedExportPayloadV3 {
 }
 
 export function importAllData(payload: unknown): void {
+  if (isCombinedV5(payload)) {
+    for (const programId of PROGRAM_IDS) {
+      writeProgramData(
+        programId,
+        normalizeProgramPayload(payload.programs[programId]),
+      );
+    }
+
+    if (isProgramId(payload.activeProgram)) {
+      writeJson(STORAGE_KEYS.activeProgram, payload.activeProgram);
+    }
+
+    notifyActiveProgramChange();
+    return;
+  }
+
   if (isCombinedV4(payload)) {
     for (const programId of PROGRAM_IDS) {
       writeProgramData(
@@ -241,6 +307,6 @@ export function importAllData(payload: unknown): void {
   }
 
   throw new Error(
-    "Invalid JSON backup. Expected version 4 (detailed NB) or version 3 (legacy).",
+    "Invalid JSON backup. Expected version 5, version 4 (detailed NB), or version 3 (legacy).",
   );
 }

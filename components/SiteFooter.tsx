@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { CONTACT_EMAIL } from "@/lib/site";
+import {
+  CONTACT_TELEGRAM,
+  CONTACT_TELEGRAM_URL,
+  GITHUB_REPO_URL,
+  SITE_OPERATOR,
+} from "@/lib/site";
 
 type SiteFooterProps = {
   actions?: React.ReactNode;
@@ -21,7 +26,7 @@ export function SiteFooter({ actions }: SiteFooterProps) {
         </Link>
         <span aria-hidden="true">·</span>
         <a
-          href="https://github.com/saurluca/coxi-credits"
+          href={GITHUB_REPO_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-500 hover:underline"
@@ -30,17 +35,19 @@ export function SiteFooter({ actions }: SiteFooterProps) {
         </a>
       </p>
       <p>
-        Created by Luca Saur •{" "}
+        Created by {SITE_OPERATOR} • Telegram:{" "}
         <a
-          href={`mailto:${CONTACT_EMAIL}`}
+          href={CONTACT_TELEGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-blue-500 hover:underline"
         >
-          {CONTACT_EMAIL}
+          {CONTACT_TELEGRAM}
         </a>
       </p>
       <p className="mt-4 text-xs text-gray-400 max-w-2xl mx-auto">
         This tool is not affiliated with, endorsed by, or officially connected
-        to the University of Tübingen. All calculations and grade estimates are
+        to the Eberhard Karls University of Tübingen. All calculations and grade estimates are
         provided for informational purposes only; no guarantee is given for
         their accuracy.
       </p>
