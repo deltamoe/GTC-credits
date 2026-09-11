@@ -8,7 +8,12 @@ import { useProgramTracker } from "@/hooks/useProgramTracker";
 import { getModulesByGroup } from "@/app/constants/programs";
 import { computeModuleCompletedCredits } from "@/lib/moduleGrades";
 import { ProgramId } from "@/app/types";
-import { getGroupBackground } from "@/app/utils/colors";
+import {
+  getGroupLabelColor,
+  getGroupTopBorder,
+  SECTION_CARD_BASE,
+} from "@/app/utils/colors";
+import { pdfBlockProps } from "@/lib/pdfBlocks";
 
 interface ProgramViewProps {
   programId: ProgramId;
@@ -56,7 +61,7 @@ export function ProgramView({
     <div className="space-y-6">
       {showModuleView && (
         <OverallProgress
-          title={`Overall Progress (${config.shortLabel})`}
+          title={`Overall Progress in ${config.shortLabel}`}
           overallProgress={overallProgress}
           totalCompletedCredits={totalCompletedCredits}
           totalRequiredCredits={totalRequiredCredits}
@@ -75,14 +80,39 @@ export function ProgramView({
         const modules = getModulesByGroup(programId, group.id);
         if (modules.length === 0) return null;
 
+        const groupCompleted = modules.reduce(
+          (sum, module) =>
+            sum +
+            computeModuleCompletedCredits(
+              module,
+              grades,
+              completedModules,
+              slotSelections,
+              userCourses,
+              thesisGrade,
+            ),
+          0,
+        );
+        const groupTotal = modules.reduce((sum, module) => sum + module.credits, 0);
+
         return (
           <section
             key={group.id}
-            className={`p-6 rounded-lg border ${getGroupBackground(group.id)}`}
+            className={`${SECTION_CARD_BASE} border-t-4 ${getGroupTopBorder(group.id)}`}
           >
-            <h2 className="text-xl font-semibold text-center mb-4">
-              {group.label}
-            </h2>
+            <div
+              {...pdfBlockProps(isExporting, true)}
+              className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <h2 className="text-xl font-semibold text-gray-900">
+                {group.label}
+              </h2>
+              <span
+                className={`text-xs font-medium uppercase tracking-wide ${getGroupLabelColor(group.id)}`}
+              >
+                {groupCompleted} / {groupTotal} ECTS
+              </span>
+            </div>
             <div className="space-y-3">
               {modules.map((module) => {
                 if (module.structure) {

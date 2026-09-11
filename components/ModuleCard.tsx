@@ -16,6 +16,7 @@ import {
 import { validGrades } from "@/app/constants/programs";
 import { NeuroModule } from "@/app/types";
 import { getGroupColor } from "@/app/utils/colors";
+import { pdfBlockProps } from "@/lib/pdfBlocks";
 
 interface ModuleCardProps {
   module: NeuroModule;
@@ -44,7 +45,8 @@ export function ModuleCard({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border-l-4 ${borderColor} border border-gray-200`}
+      {...pdfBlockProps(isExporting)}
+      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border-l-4 ${borderColor} border border-gray-200 shadow-sm transition-shadow hover:shadow-md`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -55,12 +57,12 @@ export function ModuleCard({
             {module.credits} CP
           </span>
           {module.kind === "completion" && !module.countsTowardFinal && (
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+            <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
               Not in final grade
             </span>
           )}
         </div>
-        <p className="font-medium text-gray-900 mt-1">{module.name}</p>
+        <p className="font-bold text-gray-900 mt-1">{module.name}</p>
       </div>
 
       <div className="flex items-center gap-3 shrink-0">

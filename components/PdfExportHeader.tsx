@@ -1,3 +1,4 @@
+import { BRAND_BADGE, BRAND_TOP_BORDER } from "@/app/utils/colors";
 import { PdfExportMode } from "@/lib/exportPdf";
 
 interface PdfExportHeaderProps {
@@ -14,14 +15,18 @@ export function PdfExportHeader({
   const modeLabel = mode === "planning" ? "Semester Plan" : "Grade Overview";
 
   return (
-    <div className="bg-orange-100 border border-orange-300 rounded-lg p-6 text-center">
-      <h1 className="text-2xl font-bold text-black mb-2">
-        GTC Neuroscience Credit Calculator
+    <div
+      data-pdf-block=""
+      className={`bg-white border border-gray-200 rounded-lg p-6 text-left shadow-sm ${BRAND_TOP_BORDER}`}
+    >
+      <h1 className="text-2xl font-bold text-black leading-tight">
+        GTC of Neuroscience
       </h1>
-      <p className="text-lg text-gray-800">
+      <p className="mt-1 text-lg font-medium text-gray-600">Credit Calculator</p>
+      <p className={`mt-4 inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${BRAND_BADGE}`}>
         {fullName} ({shortLabel})
       </p>
-      <p className="text-sm font-semibold text-orange-700 mt-2">{modeLabel}</p>
+      <p className="mt-2 text-sm font-semibold text-university-700">{modeLabel}</p>
     </div>
   );
 }

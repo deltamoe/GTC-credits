@@ -1,4 +1,4 @@
-# GTC Neuroscience Credit Calculator
+# GTC of Neuroscience Credit Calculator
 
 Website to track modules and calculate grades for the three M.Sc. programs at the Graduate Training Centre of Neuroscience (Eberhard Karls University of Tübingen):
 

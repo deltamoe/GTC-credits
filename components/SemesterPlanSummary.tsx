@@ -17,6 +17,8 @@ import {
   getPlanningDragItemId,
   setPlanningDragData,
 } from "@/lib/planningDrag";
+import { BRAND_TOP_BORDER, SECTION_CARD_BASE } from "@/app/utils/colors";
+import { pdfBlockProps } from "@/lib/pdfBlocks";
 import { cn } from "@/lib/utils";
 
 interface SemesterPlanSummaryProps {
@@ -80,9 +82,11 @@ export function SemesterPlanSummary({
   };
 
   return (
-    <section className="p-6 rounded-lg border border-orange-200 bg-orange-50 space-y-4">
-      <div className="text-center space-y-1">
-        <h2 className="text-xl font-semibold">Semester plan</h2>
+    <section
+      className={`${SECTION_CARD_BASE} ${BRAND_TOP_BORDER} space-y-4`}
+    >
+      <div {...pdfBlockProps(isExporting, true)} className="space-y-1">
+        <h2 className="text-xl font-semibold text-gray-900">Semester plan</h2>
         <p className="text-sm text-gray-600">
           {isExporting
             ? "Planned course schedule by semester"
@@ -102,11 +106,12 @@ export function SemesterPlanSummary({
           return (
             <div
               key={group.label}
+              {...pdfBlockProps(isExporting)}
               className={cn(
                 "rounded-lg border bg-white p-4 space-y-3 min-h-28",
                 !isExporting && "transition-colors",
                 isActive && !isExporting
-                  ? "border-orange-400 ring-2 ring-orange-200"
+                  ? "border-university-400 ring-2 ring-university-200"
                   : "border-gray-200",
               )}
               onDragOver={(event) => {
@@ -157,25 +162,25 @@ export function SemesterPlanSummary({
         })}
       </div>
 
-      <p className="text-sm font-semibold text-center text-gray-900">
+      <p
+        {...pdfBlockProps(isExporting)}
+        className="text-sm font-semibold text-gray-900"
+      >
         Planned total (assigned semesters): {grandTotal} CP
       </p>
 
       {!isExporting && (
-        <div className="flex flex-wrap justify-center gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           <Button
             type="button"
+            variant="outline"
             onClick={onResetToDefault}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
           >
             Reset to default
           </Button>
           {planningVisibleSemesters < MAX_PLANNED_SEMESTERS && (
-            <Button
-              type="button"
-              onClick={onAddSemester}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
+            <Button type="button" variant="outline" onClick={onAddSemester}>
               Add semester {planningVisibleSemesters + 1}
             </Button>
           )}

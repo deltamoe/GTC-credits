@@ -1,10 +1,13 @@
 import { GITHUB_REPO_URL } from "@/lib/site";
+import { computePdfPageStarts } from "@/lib/pdfBlocks";
 
 export type PdfExportMode = "grades" | "planning";
 
 const MAX_CANVAS_DIMENSION = 16384;
 const PDF_CAPTURE_WIDTH_PX = 794;
 const PDF_FOOTER_LABEL = "github.com/deltamoe/GTC-credits";
+const PDF_TOP_MARGIN_MM = 12;
+const PDF_FOOTER_MARGIN_MM = 12;
 
 type Html2Canvas = typeof import("html2canvas-pro").default;
 
@@ -79,7 +82,7 @@ function addPdfFooter(
   pdfWidth: number,
   pdfHeight: number,
 ): void {
-  const prefix = "Exported from GTC Neuro Credits • ";
+  const prefix = "Exported from GTC of Neuroscience Credits • ";
   pdf.setFontSize(8);
   pdf.setTextColor(100, 100, 100);
   const footerY = pdfHeight - 6;
@@ -89,6 +92,14 @@ function addPdfFooter(
   pdf.textWithLink(PDF_FOOTER_LABEL, startX + pdf.getTextWidth(prefix), footerY, {
     url: GITHUB_REPO_URL,
   });
+}
+
+function domHeightToCanvasHeight(
+  domHeight: number,
+  elementScrollHeight: number,
+  canvasHeight: number,
+): number {
+  return Math.round((domHeight / elementScrollHeight) * canvasHeight);
 }
 
 export async function exportElementToPdf(
@@ -108,7 +119,14 @@ export async function exportElementToPdf(
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
+    const contentHeightMm =
+      pdfHeight - PDF_TOP_MARGIN_MM - PDF_FOOTER_MARGIN_MM;
+    const pageContentHeightPx = Math.floor(
+      (PDF_CAPTURE_WIDTH_PX * contentHeightMm) / pdfWidth,
+    );
     const scale = computeScale(element, pdfWidth);
+
+    const pageStartsDom = computePdfPageStarts(element, pageContentHeightPx);
 
     const canvas = await html2canvas(element, {
       scale,
@@ -120,12 +138,29 @@ export async function exportElementToPdf(
     });
 
     const pageWidthPx = canvas.width;
-    const pageHeightPx = Math.floor((canvas.width * pdfHeight) / pdfWidth);
     const imgWidth = pdfWidth;
+    const totalDomHeight = element.scrollHeight;
+    const pageEndsDom = [...pageStartsDom.slice(1), totalDomHeight];
 
-    let yPx = 0;
-    while (yPx < canvas.height) {
-      const sliceHeightPx = Math.min(pageHeightPx, canvas.height - yPx);
+    for (let pageIndex = 0; pageIndex < pageStartsDom.length; pageIndex += 1) {
+      if (pageIndex > 0) {
+        pdf.addPage();
+      }
+
+      const startDom = pageStartsDom[pageIndex];
+      const endDom = pageEndsDom[pageIndex];
+      const startCanvas = domHeightToCanvasHeight(
+        startDom,
+        totalDomHeight,
+        canvas.height,
+      );
+      const endCanvas = domHeightToCanvasHeight(
+        endDom,
+        totalDomHeight,
+        canvas.height,
+      );
+      const sliceHeightPx = Math.max(1, endCanvas - startCanvas);
+
       const pageCanvas = document.createElement("canvas");
       pageCanvas.width = pageWidthPx;
       pageCanvas.height = sliceHeightPx;
@@ -136,7 +171,7 @@ export async function exportElementToPdf(
       ctx.drawImage(
         canvas,
         0,
-        yPx,
+        startCanvas,
         pageWidthPx,
         sliceHeightPx,
         0,
@@ -148,13 +183,15 @@ export async function exportElementToPdf(
       const pageDataUrl = pageCanvas.toDataURL("image/png");
       const pageImgHeightMm = (sliceHeightPx * imgWidth) / pageWidthPx;
 
-      pdf.addImage(pageDataUrl, "PNG", 0, 0, imgWidth, pageImgHeightMm);
+      pdf.addImage(
+        pageDataUrl,
+        "PNG",
+        0,
+        PDF_TOP_MARGIN_MM,
+        imgWidth,
+        pageImgHeightMm,
+      );
       addPdfFooter(pdf, pdfWidth, pdfHeight);
-
-      yPx += sliceHeightPx;
-      if (yPx < canvas.height) {
-        pdf.addPage();
-      }
     }
 
     pdf.save(filename);

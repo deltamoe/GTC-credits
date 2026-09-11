@@ -18,10 +18,10 @@ function GradingBadge({ graded }: { graded: boolean }) {
   return (
     <span
       className={cn(
-        "text-xs px-1.5 py-0.5 rounded shrink-0",
+        "shrink-0 rounded-full px-1.5 py-0.5 text-xs",
         graded
-          ? "bg-blue-100 text-blue-800"
-          : "bg-gray-100 text-gray-600",
+          ? "border border-blue-200 bg-blue-50 text-blue-800"
+          : "border border-gray-200 bg-gray-100 text-gray-600",
       )}
     >
       {graded ? "Graded" : "Ungraded"}
@@ -42,7 +42,7 @@ export function PlanningCourseCard({
       draggable={draggable}
       onDragStart={onDragStart}
       className={cn(
-        "flex items-stretch rounded border border-gray-200 bg-white overflow-hidden text-sm",
+        "flex items-stretch overflow-hidden rounded border border-gray-200 bg-white text-sm shadow-sm",
         draggable && "cursor-grab active:cursor-grabbing",
       )}
     >
@@ -63,9 +63,9 @@ export function PlanningCourseCard({
           </span>
           <p
             className={cn(
-              "text-gray-900",
+              "font-bold text-gray-900",
               compact ? "truncate text-xs" : "text-sm",
-              item.isPlaceholder && "italic text-gray-600",
+              item.isPlaceholder && "italic font-medium text-gray-600",
             )}
           >
             {item.name}

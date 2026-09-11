@@ -24,7 +24,7 @@ export default function Error({
             reportClientError("Error boundary reset failed:", error);
           }
         }}
-        className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+        className="rounded-md bg-university-800 px-4 py-2 text-sm font-medium text-white hover:bg-university-900"
       >
         Try again
       </button>

@@ -7,8 +7,8 @@ import {
 } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Legal Notice | GTC Neuroscience Credits",
-  description: "Legal notice for GTC Neuroscience Credits",
+  title: "Legal Notice | GTC of Neuroscience Credits",
+  description: "Legal notice for GTC of Neuroscience Credits",
 };
 
 export default function ImpressumPage() {

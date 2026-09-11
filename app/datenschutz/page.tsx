@@ -5,11 +5,12 @@ import {
   CONTACT_TELEGRAM,
   CONTACT_TELEGRAM_URL,
   SITE_OPERATOR,
+  SITE_URL,
 } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | GTC Neuroscience Credits",
-  description: "Privacy policy for GTC Neuroscience Credits",
+  title: "Privacy Policy | GTC of Neuroscience Credits",
+  description: "Privacy policy for GTC of Neuroscience Credits",
 };
 
 export default function DatenschutzPage() {
@@ -35,8 +36,8 @@ export default function DatenschutzPage() {
       <section className="space-y-2">
         <h2>2. Overview</h2>
         <p>
-          &ldquo;GTC Neuroscience Credits&rdquo; (
-          <a href="#">[URL placeholder]</a>) is a free,
+          &ldquo;GTC of Neuroscience Credits&rdquo; (
+          <a href={`${SITE_URL}/`}>{`${SITE_URL}/`}</a>) is a free,
           non-commercial online tool for tracking study progress and estimating
           grades in the M.Sc. programs at the Graduate Training Centre of
           Neuroscience (Eberhard Karls University of Tübingen): Neural and Behavioural

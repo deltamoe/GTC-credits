@@ -10,6 +10,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        university: {
+          DEFAULT: "#7A1212",
+          50: "#FAF0F0",
+          100: "#F5E0E0",
+          200: "#E8BFBF",
+          400: "#B03030",
+          500: "#941818",
+          600: "#7A1212",
+          700: "#660F0F",
+          800: "#520C0C",
+          900: "#3D0909",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

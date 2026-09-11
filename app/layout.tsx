@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "GTC Neuroscience Credits",
+  title: "GTC of Neuroscience Credits",
   description:
     "Track credits and calculate grades for the Graduate Training Centre of Neuroscience M.Sc. programs at the Eberhard Karls University of Tübingen",
 };

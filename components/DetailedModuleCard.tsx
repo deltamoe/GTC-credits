@@ -25,12 +25,17 @@ import {
   ExportSelectionValue,
 } from "@/components/ExportFieldDisplay";
 import { PlanningCourseCard } from "@/components/PlanningCourseCard";
-import { getGroupColor } from "@/app/utils/colors";
+import {
+  BRAND_BADGE,
+  getGroupColor,
+  getGroupNestedBorder,
+} from "@/app/utils/colors";
 import {
   buildPlaceholders,
   PlanningItem,
   userAddedHandbookSemester,
 } from "@/lib/planning";
+import { pdfBlockProps } from "@/lib/pdfBlocks";
 import { setPlanningDragData } from "@/lib/planningDrag";
 
 interface DetailedModuleCardProps {
@@ -128,10 +133,10 @@ function DraggablePlanningSource({
 function StatusBadge({ graded }: { graded: boolean }) {
   return (
     <span
-      className={`text-xs px-2 py-0.5 rounded ${
+      className={`rounded-full border px-2 py-0.5 text-xs ${
         graded
-          ? "bg-blue-100 text-blue-800"
-          : "bg-gray-100 text-gray-600"
+          ? "border-blue-200 bg-blue-50 text-blue-800"
+          : "border-gray-200 bg-gray-100 text-gray-600"
       }`}
     >
       {graded ? "Graded" : "Ungraded"}
@@ -192,7 +197,7 @@ function SubCourseRow({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-gray-100">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded border border-gray-100 bg-white px-3 py-2">
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-gray-500">{credits} CP</span>
@@ -201,7 +206,7 @@ function SubCourseRow({
             <span className="text-xs text-gray-500">Weight {weight}%</span>
           )}
         </div>
-        <p className="text-sm text-gray-900 mt-0.5">{name}</p>
+        <p className="text-sm font-bold text-gray-900 mt-0.5">{name}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {graded ? (
@@ -334,7 +339,8 @@ export function DetailedModuleCard({
 
   return (
     <div
-      className={`p-4 bg-white rounded-lg border-l-4 ${borderColor} border border-gray-200 space-y-3`}
+      {...pdfBlockProps(isExporting)}
+      className={`space-y-3 rounded-lg border border-gray-200 border-l-4 ${borderColor} bg-white p-4 shadow-sm transition-shadow hover:shadow-md`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -346,19 +352,19 @@ export function DetailedModuleCard({
               {completedCredits}/{module.credits} CP
             </span>
             {!module.countsTowardFinal && (
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+              <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                 Not in final grade
               </span>
             )}
           </div>
-          <p className="font-medium text-gray-900 mt-1">{module.name}</p>
+          <p className="font-bold text-gray-900 mt-1">{module.name}</p>
           {module.hint && (
             <p className="text-xs text-gray-600 mt-1">{module.hint}</p>
           )}
         </div>
         {moduleGrade !== null &&
           (module.countsTowardFinal || module.kind === "thesis") && (
-          <span className="text-sm font-semibold text-purple-800 bg-purple-50 px-3 py-1 rounded">
+          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${BRAND_BADGE}`}>
             Module grade: {moduleGrade}
           </span>
         )}
@@ -375,7 +381,9 @@ export function DetailedModuleCard({
       </div>
 
       {structure?.type === "subCourses" && (
-        <div className="space-y-2 pl-2 border-l-2 border-gray-200">
+        <div
+          className={`space-y-2 border-l-2 pl-2 ${getGroupNestedBorder(module.group)}`}
+        >
           {structure.subCourses.map((subCourse) => (
             <SubCourseRow
               key={subCourse.id}
@@ -400,7 +408,9 @@ export function DetailedModuleCard({
       )}
 
       {structure?.type === "guidedSlots" && (
-        <div className="space-y-2 pl-2 border-l-2 border-gray-200">
+        <div
+          className={`space-y-2 border-l-2 pl-2 ${getGroupNestedBorder(module.group)}`}
+        >
           {structure.slots.map((slot) => {
             const selectedOption = slot.options.find(
               (option) => option.id === slotSelections[slot.id],
@@ -429,7 +439,7 @@ export function DetailedModuleCard({
             return (
               <div
                 key={slot.id}
-                className="py-2 px-3 bg-gray-50 rounded border border-gray-100 space-y-2"
+                className="space-y-2 rounded border border-gray-100 bg-white px-3 py-2"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium">{slot.label}</span>
@@ -503,7 +513,7 @@ export function DetailedModuleCard({
             </p>
           )}
           {isExporting && (userCourses[module.id] ?? []).length === 0 && (
-            <p className="text-sm text-gray-500 italic py-2 px-3 bg-gray-50 rounded border border-gray-100">
+            <p className="rounded border border-gray-100 bg-white px-3 py-2 text-sm italic text-gray-500">
               No courses added yet
             </p>
           )}
@@ -530,7 +540,7 @@ export function DetailedModuleCard({
             ) : (
               <div
                 key={course.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 bg-gray-50 rounded border border-gray-100"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded border border-gray-100 bg-white px-3 py-2"
               >
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -539,7 +549,7 @@ export function DetailedModuleCard({
                     </span>
                     <StatusBadge graded={course.graded} />
                   </div>
-                  <p className="text-sm text-gray-900">{course.name}</p>
+                  <p className="text-sm font-bold text-gray-900">{course.name}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {course.graded ? (

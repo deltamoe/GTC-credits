@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { ExternalLink, FileDown, FileJson } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProgramView } from "@/components/ProgramView";
@@ -19,6 +20,12 @@ import {
 import { getErrorMessage, reportClientError } from "@/lib/errors";
 import { PdfExportHeader } from "@/components/PdfExportHeader";
 import { exportElementToPdf } from "@/lib/exportPdf";
+import {
+  BRAND_ACTIVE_BUTTON,
+  BRAND_BADGE,
+  BRAND_LINK,
+  BRAND_TOP_BORDER,
+} from "@/app/utils/colors";
 
 export function CourseTrackerShell() {
   const program = useSyncExternalStore(
@@ -138,69 +145,90 @@ export function CourseTrackerShell() {
     });
   };
 
+  const toggleButtonClass = (active: boolean) =>
+    `flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
+      active
+        ? `${BRAND_ACTIVE_BUTTON} scale-[1.02]`
+        : "text-gray-600 hover:bg-white hover:text-gray-900"
+    }`;
+
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="bg-orange-100 border border-orange-300 rounded-lg p-6 text-center">
-        <h1 className="text-3xl font-bold text-black mb-4">
-          GTC Neuroscience Credit Calculator
-        </h1>
-
-        <div className="flex flex-col items-center gap-3 mb-4">
-          <div className="inline-flex flex-wrap justify-center rounded-lg border border-orange-300 bg-white p-1 gap-1">
-            {PROGRAM_IDS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                title={PROGRAMS[id].fullName}
-                onClick={() => handleProgramChange(id)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  program === id
-                    ? "bg-orange-500 text-white"
-                    : "text-gray-700 hover:bg-orange-50"
-                }`}
-              >
-                {PROGRAMS[id].shortLabel}
-              </button>
-            ))}
+      <header className="space-y-4">
+        <div className={`bg-white border border-gray-200 rounded-lg p-6 shadow-sm ${BRAND_TOP_BORDER}`}>
+          <div className="text-left">
+            <h1 className="text-4xl font-bold text-black leading-tight">
+              GTC of Neuroscience
+            </h1>
+            <p className="mt-1 text-xl font-medium text-gray-600">
+              Credit Calculator
+            </p>
           </div>
 
-          <div className="inline-flex flex-wrap justify-center rounded-lg border border-orange-300 bg-white p-1 gap-1">
-            <button
-              type="button"
-              onClick={() => handleViewModeChange(false)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                !planningMode
-                  ? "bg-orange-500 text-white"
-                  : "text-gray-700 hover:bg-orange-50"
-              }`}
+          <div className="mt-6 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${BRAND_BADGE}`}>
+              {activeConfig.fullName}
+            </span>
+            <span aria-hidden="true" className="hidden text-gray-300 sm:inline">
+              ·
+            </span>
+            <a
+              href={activeConfig.infoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-1 text-sm hover:underline ${BRAND_LINK}`}
             >
-              Grade overview
-            </button>
-            <button
-              type="button"
-              onClick={() => handleViewModeChange(true)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                planningMode
-                  ? "bg-orange-500 text-white"
-                  : "text-gray-700 hover:bg-orange-50"
-              }`}
-            >
-              Planning mode
-            </button>
+              Official program information
+              <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+            </a>
           </div>
         </div>
 
-        <p className="text-lg text-gray-800 mb-2">{activeConfig.fullName}</p>
+        <div className="sticky top-0 z-20 rounded-lg border border-gray-200 bg-white/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80">
+          <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center md:justify-center md:gap-10">
+            <div className="flex flex-col gap-1.5 md:items-center">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Program
+              </span>
+              <div className="inline-flex w-full rounded-lg border border-gray-200 bg-gray-50 p-1 gap-1 md:w-auto">
+                {PROGRAM_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    title={PROGRAMS[id].fullName}
+                    onClick={() => handleProgramChange(id)}
+                    className={toggleButtonClass(program === id)}
+                  >
+                    {PROGRAMS[id].shortLabel}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <a
-          href={activeConfig.infoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline text-orange-600 hover:text-orange-800 text-sm block"
-        >
-          Official program information
-        </a>
-      </div>
+            <div className="flex flex-col gap-1.5 md:items-center">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                View
+              </span>
+              <div className="inline-flex w-full rounded-lg border border-gray-200 bg-gray-50 p-1 gap-1 md:w-auto">
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange(false)}
+                  className={toggleButtonClass(!planningMode)}
+                >
+                  Grade overview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange(true)}
+                  className={toggleButtonClass(planningMode)}
+                >
+                  Planning mode
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div
         ref={contentRef}
@@ -228,19 +256,27 @@ export function CourseTrackerShell() {
               <Button
                 onClick={runExportPdf}
                 disabled={isExporting}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-university-800 text-white hover:bg-university-900"
               >
-                {isExporting ? "Exporting..." : "📄 Export to PDF"}
+                {isExporting ? (
+                  "Exporting..."
+                ) : (
+                  <>
+                    <FileDown aria-hidden="true" />
+                    Export to PDF
+                  </>
+                )}
               </Button>
               <Button
                 onClick={handleExportJson}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="bg-emerald-600 text-white hover:bg-emerald-700"
               >
-                🧾 Export JSON
+                <FileJson aria-hidden="true" />
+                Export JSON
               </Button>
               <Button
                 onClick={openUploadModal}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
+                className="bg-blue-600 text-white hover:bg-blue-700"
               >
                 ⬆️ Upload JSON
               </Button>
