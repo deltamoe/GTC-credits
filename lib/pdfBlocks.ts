@@ -32,10 +32,20 @@ interface PdfBlockGroup {
 
 function collectPdfBlocks(root: HTMLElement): PdfBlockRect[] {
   const rootRect = root.getBoundingClientRect();
+  const blockElements = Array.from(
+    root.querySelectorAll(`[${PDF_BLOCK}]`),
+  ) as HTMLElement[];
 
-  return Array.from(root.querySelectorAll(`[${PDF_BLOCK}]`))
-    .map((node) => {
-      const element = node as HTMLElement;
+  // Prefer the smallest splittable units so tall cards break between rows.
+  const leafBlocks = blockElements.filter(
+    (element) =>
+      !blockElements.some(
+        (other) => other !== element && element.contains(other),
+      ),
+  );
+
+  return leafBlocks
+    .map((element) => {
       const rect = element.getBoundingClientRect();
       const top = rect.top - rootRect.top + root.scrollTop;
       const bottom = top + rect.height;

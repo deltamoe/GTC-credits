@@ -6,8 +6,11 @@ export type PdfExportMode = "grades" | "planning";
 const MAX_CANVAS_DIMENSION = 16384;
 const PDF_CAPTURE_WIDTH_PX = 794;
 const PDF_FOOTER_LABEL = "github.com/deltamoe/GTC-credits";
-const PDF_TOP_MARGIN_MM = 12;
-const PDF_FOOTER_MARGIN_MM = 12;
+const PDF_TOP_MARGIN_MM = 18;
+const PDF_CONTINUATION_TOP_MARGIN_MM = 24;
+const PDF_FOOTER_MARGIN_MM = 20;
+const PDF_FOOTER_TEXT_OFFSET_MM = 10;
+const PDF_CONTENT_SAFETY_BUFFER_PX = 20;
 
 type Html2Canvas = typeof import("html2canvas-pro").default;
 
@@ -66,7 +69,7 @@ function prepareElementForCapture(
   const previousPadding = element.style.padding;
   element.style.width = `${PDF_CAPTURE_WIDTH_PX}px`;
   element.style.maxWidth = `${PDF_CAPTURE_WIDTH_PX}px`;
-  element.style.padding = "12px";
+  element.style.padding = "20px";
   element.dataset.pdfExportMode = mode;
 
   return () => {
@@ -85,7 +88,7 @@ function addPdfFooter(
   const prefix = "Exported from GTC of Neuroscience Credits • ";
   pdf.setFontSize(8);
   pdf.setTextColor(100, 100, 100);
-  const footerY = pdfHeight - 6;
+  const footerY = pdfHeight - PDF_FOOTER_TEXT_OFFSET_MM;
   const totalWidth = pdf.getTextWidth(prefix + PDF_FOOTER_LABEL);
   const startX = pdfWidth / 2 - totalWidth / 2;
   pdf.text(prefix, startX, footerY);
@@ -100,6 +103,14 @@ function domHeightToCanvasHeight(
   canvasHeight: number,
 ): number {
   return Math.round((domHeight / elementScrollHeight) * canvasHeight);
+}
+
+function getTopMarginMm(pageIndex: number): number {
+  return pageIndex === 0 ? PDF_TOP_MARGIN_MM : PDF_CONTINUATION_TOP_MARGIN_MM;
+}
+
+function getContentHeightMm(pageIndex: number, pdfHeight: number): number {
+  return pdfHeight - getTopMarginMm(pageIndex) - PDF_FOOTER_MARGIN_MM;
 }
 
 export async function exportElementToPdf(
@@ -119,10 +130,11 @@ export async function exportElementToPdf(
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const contentHeightMm =
-      pdfHeight - PDF_TOP_MARGIN_MM - PDF_FOOTER_MARGIN_MM;
-    const pageContentHeightPx = Math.floor(
-      (PDF_CAPTURE_WIDTH_PX * contentHeightMm) / pdfWidth,
+    const minContentHeightMm = getContentHeightMm(1, pdfHeight);
+    const pageContentHeightPx = Math.max(
+      1,
+      Math.floor((PDF_CAPTURE_WIDTH_PX * minContentHeightMm) / pdfWidth) -
+        PDF_CONTENT_SAFETY_BUFFER_PX,
     );
     const scale = computeScale(element, pdfWidth);
 
@@ -181,13 +193,14 @@ export async function exportElementToPdf(
       );
 
       const pageDataUrl = pageCanvas.toDataURL("image/png");
+      const topMarginMm = getTopMarginMm(pageIndex);
       const pageImgHeightMm = (sliceHeightPx * imgWidth) / pageWidthPx;
 
       pdf.addImage(
         pageDataUrl,
         "PNG",
         0,
-        PDF_TOP_MARGIN_MM,
+        topMarginMm,
         imgWidth,
         pageImgHeightMm,
       );

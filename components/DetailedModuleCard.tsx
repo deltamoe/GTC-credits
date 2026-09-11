@@ -197,7 +197,10 @@ function SubCourseRow({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded border border-gray-100 bg-white px-3 py-2">
+    <div
+      {...pdfBlockProps(Boolean(isExporting))}
+      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded border border-gray-100 bg-white px-3 py-2"
+    >
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-gray-500">{credits} CP</span>
@@ -339,10 +342,12 @@ export function DetailedModuleCard({
 
   return (
     <div
-      {...pdfBlockProps(isExporting)}
       className={`space-y-3 rounded-lg border border-gray-200 border-l-4 ${borderColor} bg-white p-4 shadow-sm transition-shadow hover:shadow-md`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+      <div
+        {...pdfBlockProps(isExporting, true)}
+        className="flex flex-col sm:flex-row sm:items-start justify-between gap-2"
+      >
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-mono font-semibold text-gray-500">
@@ -439,6 +444,7 @@ export function DetailedModuleCard({
             return (
               <div
                 key={slot.id}
+                {...pdfBlockProps(isExporting)}
                 className="space-y-2 rounded border border-gray-100 bg-white px-3 py-2"
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -540,6 +546,7 @@ export function DetailedModuleCard({
             ) : (
               <div
                 key={course.id}
+                {...pdfBlockProps(isExporting)}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded border border-gray-100 bg-white px-3 py-2"
               >
                 <div>
