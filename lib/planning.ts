@@ -10,7 +10,17 @@ import {
   ProgramId,
 } from "@/app/types";
 
-export const USER_ADDED_MODULE_IDS = ["nb06", "nb07", "nb08"] as const;
+export const USER_ADDED_MODULE_IDS = [
+  "nb06",
+  "nb07",
+  "nb08",
+  "cn07",
+  "cn08",
+  "cn09",
+  "cm06",
+  "cm07",
+  "cm08",
+] as const;
 
 export const PLACEHOLDER_CREDITS = 3;
 
@@ -41,14 +51,19 @@ export function placeholderId(moduleId: string, index: number): string {
   return `${moduleId}-placeholder-${index}`;
 }
 
+const SIX_CP_ELECTIVE_MODULE_IDS = new Set(["nb08", "cn09", "cm08"]);
+
 export function userAddedHandbookSemester(
   moduleId: string,
   index: number,
 ): HandbookSemester {
-  if (moduleId === "nb08") {
+  if (SIX_CP_ELECTIVE_MODULE_IDS.has(moduleId)) {
     return index === 0 ? 1 : 2;
   }
-  return index === 0 ? 1 : 2;
+  if (index === 0) {
+    return 1;
+  }
+  return 2;
 }
 
 export function getEffectiveSemester(

@@ -12,6 +12,7 @@ interface OverallProgressProps {
   thesisGrade?: number | null;
   thesisCompleted?: boolean;
   finalGradeRatioLabel?: string;
+  isExporting?: boolean;
 }
 
 export function OverallProgress({
@@ -25,13 +26,23 @@ export function OverallProgress({
   thesisGrade,
   thesisCompleted = false,
   finalGradeRatioLabel = "3:1",
+  isExporting = false,
 }: OverallProgressProps) {
   const showMasterGrades = courseworkGrade !== undefined;
 
   return (
     <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-6 rounded-lg border border-purple-200">
       <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
-      <Progress value={overallProgress} className="h-3" />
+      {isExporting ? (
+        <div className="h-3 w-full overflow-hidden rounded-full bg-purple-200">
+          <div
+            className="h-full rounded-full bg-purple-600"
+            style={{ width: `${Math.min(100, Math.max(0, overallProgress))}%` }}
+          />
+        </div>
+      ) : (
+        <Progress value={overallProgress} className="h-3" />
+      )}
       <p className="text-lg text-center mt-2">
         {totalCompletedCredits} of {totalRequiredCredits} ECTS completed (
         {Math.round(overallProgress)}%)

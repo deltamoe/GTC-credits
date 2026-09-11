@@ -50,7 +50,7 @@ export function ProgramView({
     overallProgress,
   } = useProgramTracker(programId);
 
-  const showModuleView = !(planningMode && programId === "nb");
+  const showModuleView = !planningMode;
 
   return (
     <div className="space-y-6">
@@ -66,6 +66,7 @@ export function ProgramView({
           thesisGrade={thesisGrade}
           thesisCompleted={thesisCompleted}
           finalGradeRatioLabel={config.finalGradeRatioLabel}
+          isExporting={isExporting}
         />
       )}
 
@@ -142,7 +143,7 @@ export function ProgramView({
         );
       })}
 
-      {planningMode && programId === "nb" && !isExporting && (
+      {planningMode && (
         <SemesterPlanSummary
           programId={programId}
           userCourses={userCourses}
@@ -153,6 +154,7 @@ export function ProgramView({
           onSetPlannedSemester={setPlannedSemester}
           onResetToDefault={resetPlanningToDefault}
           onAddSemester={addPlanningSemester}
+          isExporting={isExporting}
         />
       )}
     </div>

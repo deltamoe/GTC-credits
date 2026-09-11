@@ -11,6 +11,7 @@ interface PlanningCourseCardProps {
   onDragStart?: (event: React.DragEvent) => void;
   onUnassign?: (itemId: string) => void;
   compact?: boolean;
+  exportMode?: boolean;
 }
 
 function GradingBadge({ graded }: { graded: boolean }) {
@@ -34,6 +35,7 @@ export function PlanningCourseCard({
   onDragStart,
   onUnassign,
   compact = false,
+  exportMode = false,
 }: PlanningCourseCardProps) {
   return (
     <div

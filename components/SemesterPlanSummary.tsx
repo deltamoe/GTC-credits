@@ -32,6 +32,7 @@ interface SemesterPlanSummaryProps {
   ) => void;
   onResetToDefault: () => void;
   onAddSemester: () => void;
+  isExporting?: boolean;
 }
 
 export function SemesterPlanSummary({
@@ -44,6 +45,7 @@ export function SemesterPlanSummary({
   onSetPlannedSemester,
   onResetToDefault,
   onAddSemester,
+  isExporting = false,
 }: SemesterPlanSummaryProps) {
   const [activeDropZone, setActiveDropZone] = useState<
     PlannedSemester | "unassigned" | null
@@ -82,11 +84,18 @@ export function SemesterPlanSummary({
       <div className="text-center space-y-1">
         <h2 className="text-xl font-semibold">Semester plan</h2>
         <p className="text-sm text-gray-600">
-          Drag courses between semesters to plan your schedule.
+          {isExporting
+            ? "Planned course schedule by semester"
+            : "Drag courses between semesters to plan your schedule."}
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div
+        className={cn(
+          "grid gap-4",
+          isExporting ? "grid-cols-2" : "sm:grid-cols-2",
+        )}
+      >
         {groups.map((group) => {
           const isActive = activeDropZone === group.semester;
 
@@ -94,8 +103,9 @@ export function SemesterPlanSummary({
             <div
               key={group.label}
               className={cn(
-                "rounded-lg border bg-white p-4 space-y-3 min-h-28 transition-colors",
-                isActive
+                "rounded-lg border bg-white p-4 space-y-3 min-h-28",
+                !isExporting && "transition-colors",
+                isActive && !isExporting
                   ? "border-orange-400 ring-2 ring-orange-200"
                   : "border-gray-200",
               )}
@@ -121,18 +131,23 @@ export function SemesterPlanSummary({
               <div className="space-y-2">
                 {group.items.length === 0 ? (
                   <p className="text-xs text-gray-400 italic py-4 text-center border border-dashed border-gray-200 rounded">
-                    Drop courses here
+                    {isExporting ? "No courses assigned" : "Drop courses here"}
                   </p>
                 ) : (
                   group.items.map((item) => (
                     <PlanningCourseCard
                       key={item.id}
                       item={item}
-                      draggable
+                      exportMode={isExporting}
+                      draggable={!isExporting}
                       onDragStart={(event) =>
                         setPlanningDragData(event, item.id)
                       }
-                      onUnassign={(itemId) => onSetPlannedSemester(itemId, "")}
+                      onUnassign={
+                        isExporting
+                          ? undefined
+                          : (itemId) => onSetPlannedSemester(itemId, "")
+                      }
                     />
                   ))
                 )}
@@ -146,24 +161,26 @@ export function SemesterPlanSummary({
         Planned total (assigned semesters): {grandTotal} CP
       </p>
 
-      <div className="flex flex-wrap justify-center gap-2 pt-2">
-        <Button
-          type="button"
-          onClick={onResetToDefault}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          Reset to default
-        </Button>
-        {planningVisibleSemesters < MAX_PLANNED_SEMESTERS && (
+      {!isExporting && (
+        <div className="flex flex-wrap justify-center gap-2 pt-2">
           <Button
             type="button"
-            onClick={onAddSemester}
+            onClick={onResetToDefault}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
-            Add semester {planningVisibleSemesters + 1}
+            Reset to default
           </Button>
-        )}
-      </div>
+          {planningVisibleSemesters < MAX_PLANNED_SEMESTERS && (
+            <Button
+              type="button"
+              onClick={onAddSemester}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Add semester {planningVisibleSemesters + 1}
+            </Button>
+          )}
+        </div>
+      )}
     </section>
   );
 }

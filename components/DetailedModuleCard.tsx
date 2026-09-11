@@ -19,6 +19,11 @@ import {
   ModuleGroup,
   NeuroModule,
 } from "@/app/types";
+import {
+  ExportCompletionValue,
+  ExportGradeValue,
+  ExportSelectionValue,
+} from "@/components/ExportFieldDisplay";
 import { PlanningCourseCard } from "@/components/PlanningCourseCard";
 import { getGroupColor } from "@/app/utils/colors";
 import {
@@ -200,18 +205,22 @@ function SubCourseRow({
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {graded ? (
-          <GradeSelect
-            value={grade}
-            onChange={(next) => onSetGrade(id, next)}
-            disabled={isExporting}
-          />
+          isExporting ? (
+            <ExportGradeValue value={grade} />
+          ) : (
+            <GradeSelect
+              value={grade}
+              onChange={(next) => onSetGrade(id, next)}
+            />
+          )
+        ) : isExporting ? (
+          <ExportCompletionValue completed={completed} />
         ) : (
           <div className="flex items-center gap-2">
             <Checkbox
               id={`sub-${id}`}
               checked={completed}
               onCheckedChange={() => onToggleCompletion(id)}
-              disabled={isExporting}
             />
             <Label htmlFor={`sub-${id}`} className="text-sm">
               Completed
@@ -354,11 +363,14 @@ export function DetailedModuleCard({
           </span>
         )}
         {structure?.type === "thesis" && (
-          <GradeSelect
-            value={thesisGrade ?? grades[module.id]}
-            onChange={onSetThesisGrade}
-            disabled={isExporting}
-          />
+          isExporting ? (
+            <ExportGradeValue value={thesisGrade ?? grades[module.id]} />
+          ) : (
+            <GradeSelect
+              value={thesisGrade ?? grades[module.id]}
+              onChange={onSetThesisGrade}
+            />
+          )
         )}
       </div>
 
@@ -425,29 +437,40 @@ export function DetailedModuleCard({
                   <StatusBadge graded={slot.graded} />
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <Select
-                    value={slotSelections[slot.id] ?? ""}
-                    onValueChange={(optionId) =>
-                      onSetSlotSelection(slot.id, optionId)
-                    }
-                    disabled={isExporting}
-                  >
-                    <SelectTrigger className="w-full sm:flex-1">
-                      <SelectValue placeholder="Choose course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {slot.options.map((option) => (
-                        <SelectItem key={option.id} value={option.id}>
-                          {option.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isExporting ? (
+                    <ExportSelectionValue value={selectedOption?.name} />
+                  ) : (
+                    <Select
+                      value={slotSelections[slot.id] ?? ""}
+                      onValueChange={(optionId) =>
+                        onSetSlotSelection(slot.id, optionId)
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:flex-1">
+                        <SelectValue placeholder="Choose course" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {slot.options.map((option) => (
+                          <SelectItem key={option.id} value={option.id}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   {slot.graded ? (
-                    <GradeSelect
-                      value={grades[slot.id]}
-                      onChange={(next) => onSetGrade(slot.id, next)}
-                      disabled={isExporting || !slotSelections[slot.id]}
+                    isExporting ? (
+                      <ExportGradeValue value={grades[slot.id]} />
+                    ) : (
+                      <GradeSelect
+                        value={grades[slot.id]}
+                        onChange={(next) => onSetGrade(slot.id, next)}
+                        disabled={!slotSelections[slot.id]}
+                      />
+                    )
+                  ) : isExporting ? (
+                    <ExportCompletionValue
+                      completed={completedModules.includes(slot.id)}
                     />
                   ) : (
                     <div className="flex items-center gap-2 shrink-0">
@@ -455,7 +478,7 @@ export function DetailedModuleCard({
                         id={`slot-${slot.id}`}
                         checked={completedModules.includes(slot.id)}
                         onCheckedChange={() => onToggleCompletion(slot.id)}
-                        disabled={isExporting || !slotSelections[slot.id]}
+                        disabled={!slotSelections[slot.id]}
                       />
                       <Label htmlFor={`slot-${slot.id}`} className="text-sm">
                         Completed
@@ -477,6 +500,11 @@ export function DetailedModuleCard({
               {structure.graded
                 ? " · Module grade = CP-weighted average of graded courses"
                 : " · Not counted in final grade"}
+            </p>
+          )}
+          {isExporting && (userCourses[module.id] ?? []).length === 0 && (
+            <p className="text-sm text-gray-500 italic py-2 px-3 bg-gray-50 rounded border border-gray-100">
+              No courses added yet
             </p>
           )}
           {(userCourses[module.id] ?? []).map((course, index) =>
@@ -515,10 +543,17 @@ export function DetailedModuleCard({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {course.graded ? (
-                    <GradeSelect
-                      value={grades[course.id]}
-                      onChange={(next) => onSetGrade(course.id, next)}
-                      disabled={isExporting}
+                    isExporting ? (
+                      <ExportGradeValue value={grades[course.id]} />
+                    ) : (
+                      <GradeSelect
+                        value={grades[course.id]}
+                        onChange={(next) => onSetGrade(course.id, next)}
+                      />
+                    )
+                  ) : isExporting ? (
+                    <ExportCompletionValue
+                      completed={completedModules.includes(course.id)}
                     />
                   ) : (
                     <div className="flex items-center gap-2">
@@ -526,7 +561,6 @@ export function DetailedModuleCard({
                         id={`user-${course.id}`}
                         checked={completedModules.includes(course.id)}
                         onCheckedChange={() => onToggleCompletion(course.id)}
-                        disabled={isExporting}
                       />
                       <Label htmlFor={`user-${course.id}`} className="text-sm">
                         Completed

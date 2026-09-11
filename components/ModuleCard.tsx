@@ -9,6 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ExportCompletionValue,
+  ExportGradeValue,
+} from "@/components/ExportFieldDisplay";
 import { validGrades } from "@/app/constants/programs";
 import { NeuroModule } from "@/app/types";
 import { getGroupColor } from "@/app/utils/colors";
@@ -61,35 +65,39 @@ export function ModuleCard({
 
       <div className="flex items-center gap-3 shrink-0">
         {module.kind === "graded" || module.kind === "thesis" ? (
-          <Select
-            value={gradeValue}
-            onValueChange={(value) => {
-              if (value === "-") {
-                onSetGrade(module.id, "");
-              } else {
-                onSetGrade(module.id, parseFloat(value));
-              }
-            }}
-            disabled={isExporting}
-          >
-            <SelectTrigger className="w-24">
-              <SelectValue placeholder="Grade" />
-            </SelectTrigger>
-            <SelectContent>
-              {validGrades.map((g) => (
-                <SelectItem key={g} value={g}>
-                  {g}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          isExporting ? (
+            <ExportGradeValue value={grade} />
+          ) : (
+            <Select
+              value={gradeValue}
+              onValueChange={(value) => {
+                if (value === "-") {
+                  onSetGrade(module.id, "");
+                } else {
+                  onSetGrade(module.id, parseFloat(value));
+                }
+              }}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Grade" />
+              </SelectTrigger>
+              <SelectContent>
+                {validGrades.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
+        ) : isExporting ? (
+          <ExportCompletionValue completed={completed} />
         ) : (
           <div className="flex items-center gap-2">
             <Checkbox
               id={`module-${module.id}`}
               checked={completed}
               onCheckedChange={() => onToggleCompletion(module.id)}
-              disabled={isExporting}
             />
             <Label htmlFor={`module-${module.id}`} className="text-sm">
               Completed

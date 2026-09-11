@@ -17,7 +17,8 @@ import {
   writePlanningMode,
 } from "@/lib/storage";
 import { getErrorMessage, reportClientError } from "@/lib/errors";
-import { SITE_URL } from "@/lib/site";
+import { PdfExportHeader } from "@/components/PdfExportHeader";
+import { exportElementToPdf } from "@/lib/exportPdf";
 
 export function CourseTrackerShell() {
   const program = useSyncExternalStore(
@@ -111,84 +112,12 @@ export function CourseTrackerShell() {
     setIsExporting(true);
 
     try {
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
-      ]);
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const now = new Date();
-      const dateStr = now.toISOString().split("T")[0];
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      const targetDpi = 320;
-      const elementWidthPx = contentRef.current.clientWidth || 1024;
-      const desiredCanvasWidthPx = Math.round((pdfWidth / 25.4) * targetDpi);
-      const computedScale = Math.min(
-        2,
-        Math.max(1, desiredCanvasWidthPx / elementWidthPx),
+      const dateStr = new Date().toISOString().split("T")[0];
+      await exportElementToPdf(
+        contentRef.current,
+        `gtc-neuro-credits-${program}-${planningMode ? "plan" : "grades"}-${dateStr}.pdf`,
+        planningMode ? "planning" : "grades",
       );
-
-      const canvas = await html2canvas(contentRef.current, {
-        scale: computedScale,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      const pageWidthPx = canvas.width;
-      const pageHeightPx = Math.floor((canvas.width * pdfHeight) / pdfWidth);
-      const imgWidth = pdfWidth;
-
-      let yPx = 0;
-      while (yPx < canvas.height) {
-        const sliceHeightPx = Math.min(pageHeightPx, canvas.height - yPx);
-        const pageCanvas = document.createElement("canvas");
-        pageCanvas.width = pageWidthPx;
-        pageCanvas.height = sliceHeightPx;
-
-        const ctx = pageCanvas.getContext("2d");
-        if (!ctx) break;
-
-        ctx.drawImage(
-          canvas,
-          0,
-          yPx,
-          pageWidthPx,
-          sliceHeightPx,
-          0,
-          0,
-          pageWidthPx,
-          sliceHeightPx,
-        );
-
-        const pageDataUrl = pageCanvas.toDataURL("image/jpeg", 0.82);
-        const pageImgHeightMm = (sliceHeightPx * imgWidth) / pageWidthPx;
-
-        pdf.addImage(pageDataUrl, "JPEG", 0, 0, imgWidth, pageImgHeightMm);
-
-        const prefix = "Exported from GTC Neuro Credits • ";
-        const url = `${SITE_URL}/`;
-        pdf.setFontSize(15);
-        pdf.setTextColor(120, 120, 120);
-        const footerY = pdfHeight - 6;
-        const totalWidth = pdf.getTextWidth(prefix + url);
-        const startX = pdfWidth / 2 - totalWidth / 2;
-        pdf.text(prefix, startX, footerY);
-        pdf.textWithLink(url, startX + pdf.getTextWidth(prefix), footerY, {
-          url,
-        });
-
-        yPx += sliceHeightPx;
-        if (yPx < canvas.height) {
-          pdf.addPage();
-        }
-      }
-
-      pdf.save(`gtc-neuro-credits-${program}-${dateStr}.pdf`);
     } catch (error) {
       reportClientError("Error generating PDF:", error);
       alert(`Failed to generate PDF: ${getErrorMessage(error)}`);
@@ -235,32 +164,30 @@ export function CourseTrackerShell() {
             ))}
           </div>
 
-          {program === "nb" && (
-            <div className="inline-flex flex-wrap justify-center rounded-lg border border-orange-300 bg-white p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => handleViewModeChange(false)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  !planningMode
-                    ? "bg-orange-500 text-white"
-                    : "text-gray-700 hover:bg-orange-50"
-                }`}
-              >
-                Grade overview
-              </button>
-              <button
-                type="button"
-                onClick={() => handleViewModeChange(true)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  planningMode
-                    ? "bg-orange-500 text-white"
-                    : "text-gray-700 hover:bg-orange-50"
-                }`}
-              >
-                Planning mode
-              </button>
-            </div>
-          )}
+          <div className="inline-flex flex-wrap justify-center rounded-lg border border-orange-300 bg-white p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => handleViewModeChange(false)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                !planningMode
+                  ? "bg-orange-500 text-white"
+                  : "text-gray-700 hover:bg-orange-50"
+              }`}
+            >
+              Grade overview
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewModeChange(true)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                planningMode
+                  ? "bg-orange-500 text-white"
+                  : "text-gray-700 hover:bg-orange-50"
+              }`}
+            >
+              Planning mode
+            </button>
+          </div>
         </div>
 
         <p className="text-lg text-gray-800 mb-2">{activeConfig.fullName}</p>
@@ -275,12 +202,22 @@ export function CourseTrackerShell() {
         </a>
       </div>
 
-      <div ref={contentRef}>
+      <div
+        ref={contentRef}
+        className={isExporting ? "space-y-6 bg-white" : undefined}
+      >
+        {isExporting && (
+          <PdfExportHeader
+            fullName={activeConfig.fullName}
+            shortLabel={activeConfig.shortLabel}
+            mode={planningMode ? "planning" : "grades"}
+          />
+        )}
         <ProgramView
           key={remountKey}
           programId={program}
           isExporting={isExporting}
-          planningMode={program === "nb" ? planningMode : false}
+          planningMode={planningMode}
         />
       </div>
 
@@ -308,10 +245,6 @@ export function CourseTrackerShell() {
                 ⬆️ Upload JSON
               </Button>
             </div>
-            <p className="text-xs text-gray-500 max-w-xl">
-              JSON export includes data for all three programs (NB, CN, CM).
-              Version 5 backups include detailed NB sub-course and planning data.
-            </p>
           </>
         }
       />

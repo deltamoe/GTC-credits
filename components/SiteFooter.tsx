@@ -3,6 +3,8 @@ import {
   CONTACT_TELEGRAM,
   CONTACT_TELEGRAM_URL,
   GITHUB_REPO_URL,
+  ORIGINAL_REPO_AUTHOR,
+  ORIGINAL_REPO_URL,
   SITE_OPERATOR,
 } from "@/lib/site";
 
@@ -44,6 +46,18 @@ export function SiteFooter({ actions }: SiteFooterProps) {
         >
           {CONTACT_TELEGRAM}
         </a>
+      </p>
+      <p>
+        Based on the original{" "}
+        <a
+          href={ORIGINAL_REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:underline"
+        >
+          coxi-credits
+        </a>{" "}
+        project by {ORIGINAL_REPO_AUTHOR}.
       </p>
       <p className="mt-4 text-xs text-gray-400 max-w-2xl mx-auto">
         This tool is not affiliated with, endorsed by, or officially connected
