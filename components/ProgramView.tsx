@@ -12,6 +12,7 @@ import {
   getGroupLabelColor,
   getGroupTopBorder,
   SECTION_CARD_BASE,
+  SECTION_HEADING,
 } from "@/app/utils/colors";
 import { pdfBlockProps } from "@/lib/pdfBlocks";
 
@@ -61,7 +62,7 @@ export function ProgramView({
     <div className="space-y-6">
       {showModuleView && (
         <OverallProgress
-          title={`Overall Progress in ${config.shortLabel}`}
+          programFullName={config.fullName}
           overallProgress={overallProgress}
           totalCompletedCredits={totalCompletedCredits}
           totalRequiredCredits={totalRequiredCredits}
@@ -104,9 +105,7 @@ export function ProgramView({
               {...pdfBlockProps(isExporting, true)}
               className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
             >
-              <h2 className="text-xl font-semibold text-gray-900">
-                {group.label}
-              </h2>
+              <h2 className={SECTION_HEADING}>{group.label}</h2>
               <span
                 className={`text-xs font-medium uppercase tracking-wide ${getGroupLabelColor(group.id)}`}
               >

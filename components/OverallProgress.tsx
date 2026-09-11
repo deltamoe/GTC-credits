@@ -1,9 +1,14 @@
 import { Progress } from "@/components/ui/progress";
-import { BRAND_TOP_BORDER, SECTION_CARD_BASE } from "@/app/utils/colors";
+import {
+  BRAND_TOP_BORDER,
+  SECTION_CARD_BASE,
+  SECTION_HEADING,
+  SECTION_PRIMARY_TITLE,
+} from "@/app/utils/colors";
 import { formatAverageGrade } from "@/lib/gradeSelection";
 
 interface OverallProgressProps {
-  title?: string;
+  programFullName: string;
   overallProgress: number;
   totalCompletedCredits: number;
   totalRequiredCredits: number;
@@ -28,7 +33,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
 }
 
 export function OverallProgress({
-  title = "Overall Progress",
+  programFullName,
   overallProgress,
   totalCompletedCredits,
   totalRequiredCredits,
@@ -74,8 +79,12 @@ export function OverallProgress({
       {...(isExporting ? { "data-pdf-block": "" } : {})}
       className={`${SECTION_CARD_BASE} ${BRAND_TOP_BORDER}`}
     >
-      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+      <div className="mb-6 text-center">
+        <h2 className={SECTION_PRIMARY_TITLE}>{programFullName}</h2>
+        <p className={`mt-2 ${SECTION_HEADING}`}>Overall Progress</p>
+      </div>
+
+      <div className="mb-4 flex justify-end">
         <span className="text-sm font-medium text-gray-600">
           {Math.round(overallProgress)}% complete
         </span>

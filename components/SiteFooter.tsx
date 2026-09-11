@@ -14,7 +14,7 @@ type SiteFooterProps = {
 
 export function SiteFooter({ actions }: SiteFooterProps) {
   return (
-    <footer className="mt-12 py-4 border-t text-center text-sm text-gray-500">
+    <footer className="mt-12 w-full bg-white py-4 border-t text-center text-sm text-gray-500">
       {actions ? (
         <div className="flex flex-col items-center gap-3 mb-2">{actions}</div>
       ) : null}

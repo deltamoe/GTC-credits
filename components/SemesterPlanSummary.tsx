@@ -17,7 +17,11 @@ import {
   getPlanningDragItemId,
   setPlanningDragData,
 } from "@/lib/planningDrag";
-import { BRAND_TOP_BORDER, SECTION_CARD_BASE } from "@/app/utils/colors";
+import {
+  BRAND_TOP_BORDER,
+  SECTION_CARD_BASE,
+  SECTION_HEADING,
+} from "@/app/utils/colors";
 import { pdfBlockProps } from "@/lib/pdfBlocks";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +90,7 @@ export function SemesterPlanSummary({
       className={`${SECTION_CARD_BASE} ${BRAND_TOP_BORDER} space-y-4`}
     >
       <div {...pdfBlockProps(isExporting, true)} className="space-y-1">
-        <h2 className="text-xl font-semibold text-gray-900">Semester plan</h2>
+        <h2 className={SECTION_HEADING}>Semester plan</h2>
         <p className="text-sm text-gray-600">
           {isExporting
             ? "Planned course schedule by semester"

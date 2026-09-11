@@ -8,22 +8,30 @@ type LegalPageLayoutProps = {
 
 export function LegalPageLayout({ title, children }: LegalPageLayoutProps) {
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="rounded-lg border border-university-200 bg-university-50 p-6 text-center">
-        <h1 className="text-3xl font-bold text-black mb-4">{title}</h1>
-        <Link
-          href="/"
-          className="text-lg text-university-700 underline hover:text-university-900"
-        >
-          ← Back to Grade Calculator
-        </Link>
+    <div className="flex min-h-screen flex-col">
+      <div className="site-background flex-1">
+        <div className="max-w-4xl mx-auto p-4 space-y-6">
+          <div className="rounded-lg border border-university-200 bg-university-50 p-6 text-center">
+            <h1 className="text-3xl font-bold text-black mb-4">{title}</h1>
+            <Link
+              href="/"
+              className="text-lg text-university-700 underline hover:text-university-900"
+            >
+              ← Back to Grade Calculator
+            </Link>
+          </div>
+
+          <div className="bg-white border border-university-200 rounded-lg p-6 space-y-6 text-sm text-gray-700 leading-relaxed [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-black [&_h3]:text-base [&_h3]:font-medium [&_h3]:text-black [&_h3]:pt-2 [&_a]:text-university-700 [&_a:hover]:text-university-900 [&_a]:underline [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:rounded [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-1">
+            {children}
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white border border-university-200 rounded-lg p-6 space-y-6 text-sm text-gray-700 leading-relaxed [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-black [&_h3]:text-base [&_h3]:font-medium [&_h3]:text-black [&_h3]:pt-2 [&_a]:text-university-700 [&_a:hover]:text-university-900 [&_a]:underline [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:rounded [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-1">
-        {children}
+      <div className="relative z-10 w-full border-t border-gray-200 bg-white">
+        <div className="max-w-4xl mx-auto px-4">
+          <SiteFooter />
+        </div>
       </div>
-
-      <SiteFooter />
     </div>
   );
 }

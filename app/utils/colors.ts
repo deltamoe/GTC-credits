@@ -143,6 +143,12 @@ export function getGroupNestedBorder(group: ModuleGroup): string {
 export const SECTION_CARD_BASE =
   "bg-white border border-gray-200 rounded-lg p-6 shadow-sm";
 
+export const SECTION_HEADING =
+  "text-base font-semibold uppercase tracking-[0.14em] text-gray-700 sm:text-lg";
+
+export const SECTION_PRIMARY_TITLE =
+  "text-2xl font-bold leading-tight text-gray-900 sm:text-3xl";
+
 export const BRAND_TOP_BORDER = "border-t-4 border-t-university-800";
 export const BRAND_BADGE =
   "border border-university-200 bg-university-50 text-university-800";
