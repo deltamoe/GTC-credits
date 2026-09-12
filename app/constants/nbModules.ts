@@ -87,7 +87,7 @@ export const NB_MODULES: NeuroModule[] = [
       subCourses: [
         {
           id: "nb03-1",
-          name: "Lecture",
+          name: "Cognitive Neuroscience Lecture",
           credits: 3,
           graded: true,
           weight: 100,
@@ -95,7 +95,7 @@ export const NB_MODULES: NeuroModule[] = [
         },
         {
           id: "nb03-2",
-          name: "Seminar",
+          name: "Cognitive Neuroscience Seminar",
           credits: 3,
           graded: false,
           handbookSemester: 2,
@@ -148,10 +148,17 @@ export const NB_MODULES: NeuroModule[] = [
           label: "Statistics",
           credits: 3,
           graded: true,
-          handbookSemester: 2,
           options: [
-            { id: "nb05-stats-essential", name: "Essential Statistics" },
-            { id: "nb05-stats-advanced", name: "Advanced Statistics" },
+            {
+              id: "nb05-stats-essential",
+              name: "Essential Statistics",
+              handbookSemester: 1,
+            },
+            {
+              id: "nb05-stats-advanced",
+              name: "Advanced Statistics",
+              handbookSemester: 2,
+            },
           ],
         },
         {
@@ -159,10 +166,17 @@ export const NB_MODULES: NeuroModule[] = [
           label: "Mathematics / Programming",
           credits: 3,
           graded: false,
-          handbookSemester: 1,
           options: [
-            { id: "nb05-math-essential", name: "Essential Mathematics" },
-            { id: "nb05-math-programming", name: "Basic Programming" },
+            {
+              id: "nb05-math-essential",
+              name: "Essential Mathematics",
+              handbookSemester: 1,
+            },
+            {
+              id: "nb05-math-programming",
+              name: "Basic Programming",
+              handbookSemester: 2,
+            },
           ],
         },
       ],

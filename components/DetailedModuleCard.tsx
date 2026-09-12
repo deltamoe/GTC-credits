@@ -432,7 +432,9 @@ export function DetailedModuleCard({
                       moduleGroup: module.group,
                       name: selectedOption?.name ?? slot.label,
                       credits: slot.credits,
-                      handbookSemester: slot.handbookSemester,
+                      handbookSemester:
+                        selectedOption?.handbookSemester ??
+                        slot.handbookSemester,
                       graded: slot.graded,
                     },
                     module.id,

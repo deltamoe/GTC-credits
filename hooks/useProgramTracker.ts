@@ -21,6 +21,8 @@ import { getNumericGrade, weightedAverage } from "@/lib/gradeSelection";
 import {
   buildHandbookPlannedSemesters,
   collectPlanningItems,
+  reconcileGuidedSlotPlannedSemesters,
+  resolveSlotOptionHandbookSemester,
 } from "@/lib/planning";
 
 function getThesisSubCourseId(module: NeuroModule | undefined): string | undefined {
@@ -116,7 +118,19 @@ export function useProgramTracker(programId: ProgramId) {
     setThesisGradeState(synced.thesisGrade);
     setUserCourses(data.userCourses);
     setSlotSelections(data.slotSelections);
-    setPlannedSemesters(data.plannedSemesters);
+    const reconciledPlannedSemesters = reconcileGuidedSlotPlannedSemesters(
+      programId,
+      data.slotSelections,
+      data.plannedSemesters,
+    );
+    if (reconciledPlannedSemesters !== data.plannedSemesters) {
+      writeJsonForProgram(
+        programId,
+        STORAGE_KEYS.plannedSemesters,
+        reconciledPlannedSemesters,
+      );
+    }
+    setPlannedSemesters(reconciledPlannedSemesters);
     setPlanningVisibleSemesters(data.planningVisibleSemesters);
     setPlanningUnassigned(data.planningUnassigned);
   }, [programId, thesisModule]);
@@ -235,6 +249,25 @@ export function useProgramTracker(programId: ProgramId) {
     setSlotSelections((prev) => {
       const next = { ...prev, [slotId]: optionId };
       persistSlotSelections(next);
+      return next;
+    });
+
+    const handbookSemester = resolveSlotOptionHandbookSemester(
+      programId,
+      slotId,
+      optionId,
+    );
+    if (handbookSemester === undefined) return;
+
+    setPlannedSemesters((prev) => {
+      const next = { ...prev, [slotId]: handbookSemester };
+      persistPlannedSemesters(next);
+      return next;
+    });
+    setPlanningUnassigned((prev) => {
+      if (!prev.includes(slotId)) return prev;
+      const next = prev.filter((id) => id !== slotId);
+      persistPlanningUnassigned(next);
       return next;
     });
   };

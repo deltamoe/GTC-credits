@@ -37,6 +37,7 @@ export interface NeuroSubCourse {
 export interface GuidedSlotOption {
   id: string;
   name: string;
+  handbookSemester?: HandbookSemester;
 }
 
 export interface GuidedSlot {

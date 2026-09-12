@@ -78,6 +78,53 @@ export function getEffectiveSemester(
   return plannedSemesters[itemId] ?? handbookSemester;
 }
 
+export function resolveSlotOptionHandbookSemester(
+  programId: ProgramId,
+  slotId: string,
+  optionId: string,
+): HandbookSemester | undefined {
+  const config = getProgramConfig(programId);
+
+  for (const module of config.modules) {
+    const structure = module.structure;
+    if (structure?.type !== "guidedSlots") continue;
+
+    const slot = structure.slots.find((entry) => entry.id === slotId);
+    if (!slot) continue;
+
+    const option = slot.options.find((entry) => entry.id === optionId);
+    return option?.handbookSemester ?? slot.handbookSemester;
+  }
+
+  return undefined;
+}
+
+export function reconcileGuidedSlotPlannedSemesters(
+  programId: ProgramId,
+  slotSelections: Record<string, string>,
+  plannedSemesters: Record<string, PlannedSemester>,
+): Record<string, PlannedSemester> {
+  const next = { ...plannedSemesters };
+  let changed = false;
+
+  for (const [slotId, optionId] of Object.entries(slotSelections)) {
+    const handbookSemester = resolveSlotOptionHandbookSemester(
+      programId,
+      slotId,
+      optionId,
+    );
+    if (
+      handbookSemester !== undefined &&
+      next[slotId] !== handbookSemester
+    ) {
+      next[slotId] = handbookSemester;
+      changed = true;
+    }
+  }
+
+  return changed ? next : plannedSemesters;
+}
+
 export function buildPlaceholders(
   module: NeuroModule,
   userCourses: Record<string, AddedCourse[]>,
@@ -149,7 +196,7 @@ export function collectPlanningItems(
             moduleGroup: module.group,
             name: option?.name ?? slot.label,
             credits: slot.credits,
-            handbookSemester: slot.handbookSemester,
+            handbookSemester: option?.handbookSemester ?? slot.handbookSemester,
             graded: slot.graded,
           });
         }
